@@ -57,3 +57,62 @@ export async function createUser(input: {
   return rows[0]?.id ?? null;
 }
 
+export async function updateUsername(input: { userId: number; username: string }) {
+  await ensureSchema();
+  const sql = db();
+  const username = input.username.trim().toLowerCase();
+
+  await sql`
+    UPDATE app_users
+    SET username = ${username}
+    WHERE id = ${input.userId};
+  `;
+}
+
+export async function resetPassword(input: { userId: number; password: string }) {
+  await ensureSchema();
+  const sql = db();
+  const passwordHash = hashPassword(input.password);
+
+  await sql`
+    UPDATE app_users
+    SET password_hash = ${passwordHash}
+    WHERE id = ${input.userId};
+  `;
+}
+
+export async function setActive(input: { userId: number; isActive: boolean }) {
+  await ensureSchema();
+  const sql = db();
+
+  await sql`
+    UPDATE app_users
+    SET is_active = ${input.isActive}
+    WHERE id = ${input.userId};
+  `;
+}
+
+export async function countActiveOwners() {
+  await ensureSchema();
+  const sql = db();
+
+  const rows = await sql<Array<{ count: string }>>`
+    SELECT COUNT(*)::text AS count
+    FROM app_users
+    WHERE role = 'OWNER' AND is_active = TRUE;
+  `;
+  return Number(rows[0]?.count ?? "0");
+}
+
+export async function getUserById(userId: number) {
+  await ensureSchema();
+  const sql = db();
+
+  const rows = await sql<Omit<AppUserRow, "password_hash">[]>`
+    SELECT id, username, role, is_active, created_at
+    FROM app_users
+    WHERE id = ${userId}
+    LIMIT 1;
+  `;
+  return rows[0] ?? null;
+}

@@ -68,6 +68,10 @@ export default async function Home(props: {
 
   let cases: Awaited<ReturnType<typeof listCases>> = [];
   let dbError: string | null = null;
+  const dtf = new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   try {
     cases = await listCases({
@@ -341,6 +345,9 @@ export default async function Home(props: {
                     <th className={styles.th}>Priority</th>
                     <th className={styles.th}>Category</th>
                     <th className={styles.th}>Subject</th>
+                    <th className={styles.th}>Created</th>
+                    <th className={styles.th}>Updated</th>
+                    <th className={styles.th}>By</th>
                     <th className={styles.th}>Quick</th>
                   </tr>
                 </thead>
@@ -377,6 +384,9 @@ export default async function Home(props: {
                         <span className={styles.pill}>{c.category}</span>
                       </td>
                       <td className={styles.td}>{c.subject}</td>
+                      <td className={styles.td}>{dtf.format(new Date(c.created_at))}</td>
+                      <td className={styles.td}>{dtf.format(new Date(c.updated_at))}</td>
+                      <td className={styles.td}>{c.last_actor ?? "-"}</td>
                       <td className={styles.td}>
                         <div className={styles.buttonRow}>
                           <form action={quickStatusAction}>

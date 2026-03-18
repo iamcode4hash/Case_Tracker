@@ -51,9 +51,12 @@ export async function ensureSchema() {
       id BIGSERIAL PRIMARY KEY,
       case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
       note TEXT NOT NULL,
+      actor TEXT,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
+
+  await sql`ALTER TABLE case_notes ADD COLUMN IF NOT EXISTS actor TEXT;`;
 
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_created_at ON cases(created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_status_created_at ON cases(status, created_at DESC);`;

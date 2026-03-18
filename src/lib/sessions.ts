@@ -71,3 +71,11 @@ export async function getSessionUser() {
   >;
 }
 
+export async function deleteSessionsForUser(userId: number) {
+  await ensureSchema();
+  const sql = db();
+  await sql`
+    DELETE FROM app_sessions
+    WHERE user_id = ${userId};
+  `;
+}

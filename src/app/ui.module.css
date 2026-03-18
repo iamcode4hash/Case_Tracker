@@ -234,6 +234,36 @@
   color: rgba(232, 235, 255, 0.7);
 }
 
+.inputSmall {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.18);
+  color: #e8ebff;
+  padding: 7px 9px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.inputSmall:focus {
+  border-color: rgba(75, 102, 255, 0.65);
+  box-shadow: 0 0 0 4px rgba(75, 102, 255, 0.18);
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.cellActions {
+  display: grid;
+  gap: 8px;
+}
+
+.cellActionsRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
 .details {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;

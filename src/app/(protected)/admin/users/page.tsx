@@ -1,4 +1,10 @@
-import { createUserAction, logoutAction } from "@/app/actions";
+import {
+  createUserAction,
+  logoutAction,
+  renameUserAction,
+  resetUserPasswordAction,
+  toggleUserActiveAction,
+} from "@/app/actions";
 import { getCurrentUser } from "@/lib/current-user";
 import { listUsers } from "@/lib/users";
 import styles from "@/app/ui.module.css";
@@ -88,6 +94,7 @@ export default async function UsersPage(props: {
                   <th className={styles.th}>Username</th>
                   <th className={styles.th}>Role</th>
                   <th className={styles.th}>Active</th>
+                  <th className={styles.th}>Manage</th>
                 </tr>
               </thead>
               <tbody>
@@ -98,6 +105,44 @@ export default async function UsersPage(props: {
                       <span className={styles.pill}>{u.role}</span>
                     </td>
                     <td className={styles.td}>{u.is_active ? "Yes" : "No"}</td>
+                    <td className={styles.td}>
+                      <div className={styles.cellActions}>
+                        <form action={renameUserAction} className={styles.cellActionsRow}>
+                          <input type="hidden" name="userId" value={u.id} />
+                          <input
+                            className={styles.inputSmall}
+                            name="username"
+                            defaultValue={u.username}
+                          />
+                          <button className={styles.buttonTiny} type="submit">
+                            Rename
+                          </button>
+                        </form>
+
+                        <form action={resetUserPasswordAction} className={styles.cellActionsRow}>
+                          <input type="hidden" name="userId" value={u.id} />
+                          <input
+                            className={styles.inputSmall}
+                            name="password"
+                            type="password"
+                            placeholder="New password"
+                            minLength={6}
+                            required
+                          />
+                          <button className={styles.buttonTiny} type="submit">
+                            Reset
+                          </button>
+                        </form>
+
+                        <form action={toggleUserActiveAction}>
+                          <input type="hidden" name="userId" value={u.id} />
+                          <input type="hidden" name="isActive" value={u.is_active ? "0" : "1"} />
+                          <button className={styles.buttonTiny} type="submit">
+                            {u.is_active ? "Disable" : "Enable"}
+                          </button>
+                        </form>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -108,4 +153,3 @@ export default async function UsersPage(props: {
     </div>
   );
 }
-

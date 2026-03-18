@@ -16,6 +16,7 @@ export type CaseRow = {
   category: CaseCategory;
   priority: CasePriority;
   starred: boolean;
+  last_actor?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -24,6 +25,7 @@ export type CaseNoteRow = {
   id: number;
   case_id: string;
   note: string;
+  actor: string | null;
   created_at: string;
 };
 
@@ -47,6 +49,7 @@ export async function createCase(input: {
   note: string;
   category?: CaseCategory;
   priority?: CasePriority;
+  actor?: string;
 }) {
   await ensureSchema();
   const sql = db();
@@ -71,6 +74,23 @@ export async function createCase(input: {
       VALUES (${caseId}, ${input.note});
     `;
 
+    if (input.actor) {
+      await insertAudit({
+        caseId,
+        actor: input.actor,
+        action: "CREATE",
+        toStatus: "OPEN",
+        toCategory: category,
+        toPriority: priority,
+        toStarred: false,
+      });
+      await insertAudit({
+        caseId,
+        actor: input.actor,
+        action: "ADD_NOTE",
+      });
+    }
+
     return row;
   }
 
@@ -82,7 +102,15 @@ export async function getCaseById(caseId: string): Promise<CaseRow | null> {
   const sql = db();
 
   const rows = await sql<CaseRow[]>`
-    SELECT case_id, member_name, member_contact, subject, status, category, priority, starred, created_at, updated_at
+    SELECT case_id, member_name, member_contact, subject, status, category, priority, starred,
+      (
+        SELECT actor
+        FROM case_audits
+        WHERE case_audits.case_id = cases.case_id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) AS last_actor,
+      created_at, updated_at
     FROM cases
     WHERE case_id = ${caseId};
   `;
@@ -95,7 +123,15 @@ export async function listRecentCases(limit = 20): Promise<CaseRow[]> {
   const sql = db();
 
   const rows = await sql<CaseRow[]>`
-    SELECT case_id, member_name, member_contact, subject, status, category, priority, starred, created_at, updated_at
+    SELECT case_id, member_name, member_contact, subject, status, category, priority, starred,
+      (
+        SELECT actor
+        FROM case_audits
+        WHERE case_audits.case_id = cases.case_id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) AS last_actor,
+      created_at, updated_at
     FROM cases
     ORDER BY starred DESC, created_at DESC
     LIMIT ${limit};
@@ -150,7 +186,15 @@ export async function listCases(input: {
   const limitParam = addParam(params, limit);
 
   const query = `
-    SELECT case_id, member_name, member_contact, subject, status, category, priority, starred, created_at, updated_at
+    SELECT case_id, member_name, member_contact, subject, status, category, priority, starred,
+      (
+        SELECT actor
+        FROM case_audits
+        WHERE case_audits.case_id = cases.case_id
+        ORDER BY created_at DESC
+        LIMIT 1
+      ) AS last_actor,
+      created_at, updated_at
     FROM cases
     ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
     ORDER BY starred DESC, created_at DESC
@@ -166,7 +210,7 @@ export async function listNotes(caseId: string): Promise<CaseNoteRow[]> {
   const sql = db();
 
   const rows = await sql<CaseNoteRow[]>`
-    SELECT id, case_id, note, created_at
+    SELECT id, case_id, note, actor, created_at
     FROM case_notes
     WHERE case_id = ${caseId}
     ORDER BY created_at DESC;
@@ -175,13 +219,13 @@ export async function listNotes(caseId: string): Promise<CaseNoteRow[]> {
   return rows;
 }
 
-export async function addNote(caseId: string, note: string) {
+export async function addNote(caseId: string, note: string, actor?: string) {
   await ensureSchema();
   const sql = db();
 
   await sql`
-    INSERT INTO case_notes (case_id, note)
-    VALUES (${caseId}, ${note});
+    INSERT INTO case_notes (case_id, note, actor)
+    VALUES (${caseId}, ${note}, ${actor ?? null});
   `;
 
   await sql`
@@ -189,6 +233,14 @@ export async function addNote(caseId: string, note: string) {
     SET updated_at = NOW()
     WHERE case_id = ${caseId};
   `;
+
+  if (actor) {
+    await insertAudit({
+      caseId,
+      actor,
+      action: "ADD_NOTE",
+    });
+  }
 }
 
 export async function updateStatus(caseId: string, status: CaseStatus) {

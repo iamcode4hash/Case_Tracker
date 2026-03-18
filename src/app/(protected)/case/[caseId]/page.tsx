@@ -59,6 +59,14 @@ export default async function CasePage(props: {
 
   const notes = await listNotes(caseId);
   const audits = await listAudits(caseId, 30);
+  let createdBy = "-";
+  for (let i = audits.length - 1; i >= 0; i--) {
+    if (audits[i]?.action === "CREATE") {
+      createdBy = audits[i]?.actor ?? "-";
+      break;
+    }
+  }
+  const lastUpdatedBy = row.last_actor ?? "-";
 
   const dtf = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -143,6 +151,14 @@ export default async function CasePage(props: {
                   <td className={styles.td}>
                     {dtf.format(new Date(row.updated_at))}
                   </td>
+                </tr>
+                <tr>
+                  <td className={styles.td}>Created By</td>
+                  <td className={styles.td}>{createdBy}</td>
+                </tr>
+                <tr>
+                  <td className={styles.td}>Last Updated By</td>
+                  <td className={styles.td}>{lastUpdatedBy}</td>
                 </tr>
               </tbody>
             </table>
@@ -229,6 +245,7 @@ export default async function CasePage(props: {
                 <thead>
                   <tr>
                     <th className={styles.th}>Time</th>
+                    <th className={styles.th}>By</th>
                     <th className={styles.th}>Note</th>
                   </tr>
                 </thead>
@@ -238,6 +255,7 @@ export default async function CasePage(props: {
                       <td className={styles.td}>
                         {dtf.format(new Date(n.created_at))}
                       </td>
+                      <td className={styles.td}>{n.actor ?? "-"}</td>
                       <td className={styles.td}>{n.note}</td>
                     </tr>
                   ))}

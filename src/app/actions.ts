@@ -19,8 +19,21 @@ import {
 import { AUTH_COOKIE_NAME, authCookieValue, passwordsMatch } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/current-user";
 import { verifyPassword } from "@/lib/passwords";
-import { clearSessionCookie, createSession, type UserRole } from "@/lib/sessions";
-import { createUser, findUserByUsername } from "@/lib/users";
+import {
+  clearSessionCookie,
+  createSession,
+  deleteSessionsForUser,
+  type UserRole,
+} from "@/lib/sessions";
+import {
+  countActiveOwners,
+  createUser,
+  findUserByUsername,
+  getUserById,
+  resetPassword,
+  setActive,
+  updateUsername,
+} from "@/lib/users";
 
 function parseCategory(input: string): CaseCategory {
   const v = input.trim().toUpperCase();
@@ -46,7 +59,7 @@ async function requireWriteAccess() {
 }
 
 export async function createCaseAction(formData: FormData) {
-  await requireWriteAccess();
+  const currentUser = await requireWriteAccess();
   const memberName = String(formData.get("memberName") ?? "").trim();
   const memberContact = String(formData.get("memberContact") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
@@ -68,6 +81,7 @@ export async function createCaseAction(formData: FormData) {
     note,
     category,
     priority,
+    actor: currentUser.username,
   });
 
   revalidatePath("/");
@@ -83,7 +97,7 @@ export async function goToCaseAction(formData: FormData) {
 }
 
 export async function addNoteAction(formData: FormData) {
-  await requireWriteAccess();
+  const currentUser = await requireWriteAccess();
   const caseId = String(formData.get("caseId") ?? "")
     .trim()
     .toUpperCase();
@@ -94,7 +108,7 @@ export async function addNoteAction(formData: FormData) {
   }
   if (!note) return;
 
-  await addNote(caseId, note);
+  await addNote(caseId, note, currentUser.username);
   revalidatePath(`/case/${caseId}`);
   redirect(`/case/${encodeURIComponent(caseId)}`);
 }
@@ -325,6 +339,76 @@ export async function createUserAction(formData: FormData) {
   }
 
   await createUser({ username, password, role });
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
+}
+
+export async function renameUserAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const userId = Number(formData.get("userId") ?? 0);
+  const username = String(formData.get("username") ?? "").trim().toLowerCase();
+  if (!userId || !username) {
+    redirect("/admin/users?error=1");
+  }
+
+  await updateUsername({ userId, username });
+  await deleteSessionsForUser(userId);
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
+}
+
+export async function resetUserPasswordAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const userId = Number(formData.get("userId") ?? 0);
+  const password = String(formData.get("password") ?? "");
+  if (!userId || password.length < 6) {
+    redirect("/admin/users?error=1");
+  }
+
+  await resetPassword({ userId, password });
+  await deleteSessionsForUser(userId);
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
+}
+
+export async function toggleUserActiveAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const userId = Number(formData.get("userId") ?? 0);
+  const next = String(formData.get("isActive") ?? "").trim();
+  const isActive = next === "1";
+  if (!userId) {
+    redirect("/admin/users?error=1");
+  }
+
+  const user = await getUserById(userId);
+  if (!user) {
+    redirect("/admin/users?error=1");
+  }
+
+  if (!isActive && user.role === "OWNER") {
+    const owners = await countActiveOwners();
+    if (owners <= 1) {
+      redirect("/admin/users?error=1");
+    }
+  }
+
+  await setActive({ userId, isActive });
+  if (!isActive) {
+    await deleteSessionsForUser(userId);
+  }
+
   revalidatePath("/admin/users");
   redirect("/admin/users");
 }
