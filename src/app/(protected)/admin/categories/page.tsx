@@ -1,20 +1,19 @@
 import Link from "next/link";
 
 import {
-  createUserAction,
-  deleteUserAction,
+  createCategoryAction,
+  deleteCategoryAction,
   logoutAction,
-  renameUserAction,
-  resetUserPasswordAction,
-  toggleUserActiveAction,
+  toggleCategoryActiveAction,
+  updateCategoryAction,
 } from "@/app/actions";
 import { getCurrentUser } from "@/lib/current-user";
-import { listUsers } from "@/lib/users";
+import { listCategories } from "@/lib/categories";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function UsersPage(props: {
+export default async function CategoriesPage(props: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
   const current = await getCurrentUser();
@@ -37,7 +36,7 @@ export default async function UsersPage(props: {
   }
 
   const error = props.searchParams.error === "1";
-  const users = await listUsers();
+  const categories = await listCategories({ includeInactive: true });
 
   return (
     <div className={styles.shell}>
@@ -46,16 +45,16 @@ export default async function UsersPage(props: {
           <div className={styles.brand}>
             <div className={styles.brandMark} />
             <div className={styles.brandText}>
-              <div className={styles.title}>Users</div>
-              <div className={styles.subtitle}>Manage team access</div>
+              <div className={styles.title}>Categories</div>
+              <div className={styles.subtitle}>Create, rename, disable, delete</div>
             </div>
           </div>
           <div className={styles.buttonRow}>
             <Link className={styles.link} href="/dashboard">
               Dashboard
             </Link>
-            <Link className={styles.link} href="/admin/categories">
-              Categories
+            <Link className={styles.link} href="/admin/users">
+              Users
             </Link>
             <Link className={styles.link} href="/">
               Cases
@@ -68,28 +67,27 @@ export default async function UsersPage(props: {
           </div>
         </header>
 
-        {error ? <div className={styles.notice}>Invalid input</div> : null}
+        {error ? (
+          <div className={styles.notice}>
+            Action failed. If you tried to delete a category, make sure it has no cases.
+          </div>
+        ) : null}
 
         <div className={styles.grid}>
           <section className={styles.card}>
-            <div className={styles.cardTitle}>Create User</div>
-            <form action={createUserAction} className={styles.form}>
+            <div className={styles.cardTitle}>Create Category</div>
+            <form action={createCategoryAction} className={styles.form}>
               <label className={styles.label}>
-                Username
-                <input className={styles.input} name="username" required />
+                Label
+                <input className={styles.input} name="label" placeholder="e.g. Delivery" required />
               </label>
               <label className={styles.label}>
-                Password
-                <input className={styles.input} name="password" type="password" required />
+                Slug (optional)
+                <input className={styles.input} name="slug" placeholder="e.g. DELIVERY" />
               </label>
               <label className={styles.label}>
-                Role
-                <select className={styles.select} name="role" defaultValue="AGENT">
-                  <option value="OWNER">OWNER</option>
-                  <option value="CSM">CSM</option>
-                  <option value="AGENT">AGENT</option>
-                  <option value="VIEWER">VIEWER</option>
-                </select>
+                Sort order (optional)
+                <input className={styles.input} name="sortOrder" type="number" />
               </label>
               <div className={styles.buttonRow}>
                 <button className={styles.button} type="submit">
@@ -100,63 +98,62 @@ export default async function UsersPage(props: {
           </section>
 
           <section className={styles.card}>
-            <div className={styles.cardTitle}>Users</div>
+            <div className={styles.cardTitle}>Categories</div>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th className={styles.th}>Username</th>
-                  <th className={styles.th}>Role</th>
+                  <th className={styles.th}>Label</th>
+                  <th className={styles.th}>Slug</th>
                   <th className={styles.th}>Active</th>
+                  <th className={styles.th}>Sort</th>
                   <th className={styles.th}>Manage</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className={styles.tr}>
-                    <td className={styles.td}>{u.username}</td>
+                {categories.map((c) => (
+                  <tr key={c.id} className={styles.tr}>
+                    <td className={styles.td}>{c.label}</td>
                     <td className={styles.td}>
-                      <span className={styles.pill}>{u.role}</span>
+                      <span className={styles.mono}>{c.slug}</span>
                     </td>
-                    <td className={styles.td}>{u.is_active ? "Yes" : "No"}</td>
+                    <td className={styles.td}>{c.is_active ? "Yes" : "No"}</td>
+                    <td className={styles.td}>{c.sort_order}</td>
                     <td className={styles.td}>
                       <div className={styles.cellActions}>
-                        <form action={renameUserAction} className={styles.cellActionsRow}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <input
-                            className={styles.inputSmall}
-                            name="username"
-                            defaultValue={u.username}
-                          />
+                        <form action={updateCategoryAction} className={styles.cellActionsRow}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input className={styles.inputSmall} name="label" defaultValue={c.label} />
                           <button className={styles.buttonTiny} type="submit">
                             Rename
                           </button>
                         </form>
 
-                        <form action={resetUserPasswordAction} className={styles.cellActionsRow}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <input
-                            className={styles.inputSmall}
-                            name="password"
-                            type="password"
-                            placeholder="New password"
-                            minLength={6}
-                            required
-                          />
+                        <form action={updateCategoryAction} className={styles.cellActionsRow}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input className={styles.inputSmall} name="slug" defaultValue={c.slug} />
                           <button className={styles.buttonTiny} type="submit">
-                            Reset
+                            Update slug
                           </button>
                         </form>
 
-                        <form action={toggleUserActiveAction}>
-                          <input type="hidden" name="userId" value={u.id} />
-                          <input type="hidden" name="isActive" value={u.is_active ? "0" : "1"} />
+                        <form action={updateCategoryAction} className={styles.cellActionsRow}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input className={styles.inputSmall} name="sortOrder" defaultValue={String(c.sort_order)} />
                           <button className={styles.buttonTiny} type="submit">
-                            {u.is_active ? "Disable" : "Enable"}
+                            Update sort
                           </button>
                         </form>
 
-                        <form action={deleteUserAction}>
-                          <input type="hidden" name="userId" value={u.id} />
+                        <form action={toggleCategoryActiveAction}>
+                          <input type="hidden" name="id" value={c.id} />
+                          <input type="hidden" name="isActive" value={c.is_active ? "0" : "1"} />
+                          <button className={styles.buttonTiny} type="submit">
+                            {c.is_active ? "Disable" : "Enable"}
+                          </button>
+                        </form>
+
+                        <form action={deleteCategoryAction}>
+                          <input type="hidden" name="id" value={c.id} />
                           <button className={styles.buttonDanger} type="submit">
                             Delete
                           </button>
@@ -173,3 +170,4 @@ export default async function UsersPage(props: {
     </div>
   );
 }
+

@@ -15,6 +15,7 @@ import {
   type CasePriority,
   type CaseStatus,
 } from "@/lib/cases";
+import { listCategories } from "@/lib/categories";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
@@ -26,11 +27,13 @@ function parseStatus(value: string | undefined): CaseStatus | "ALL" {
 }
 
 function parseCategory(value: string | undefined): CaseCategory | "ALL" {
-  const v = (value ?? "").trim().toUpperCase();
-  if (v === "GENERAL" || v === "BILLING" || v === "TECHNICAL" || v === "ACCOUNT" || v === "OTHER") {
-    return v;
-  }
-  return "ALL";
+  const v = (value ?? "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^A-Z0-9_]/g, "")
+    .slice(0, 32);
+  return v ? v : "ALL";
 }
 
 function parsePriority(value: string | undefined): CasePriority | "ALL" {
@@ -58,10 +61,17 @@ export default async function Home(props: {
 }) {
   const current = await getCurrentUser();
   const q = typeof props.searchParams.q === "string" ? props.searchParams.q : "";
+  const categories = await listCategories();
   const status = parseStatus(typeof props.searchParams.status === "string" ? props.searchParams.status : undefined);
-  const category = parseCategory(
+  const categoryCandidate = parseCategory(
     typeof props.searchParams.category === "string" ? props.searchParams.category : undefined,
   );
+  const category =
+    categoryCandidate === "ALL"
+      ? "ALL"
+      : categories.some((c) => c.slug === categoryCandidate)
+        ? categoryCandidate
+        : "ALL";
   const priority = parsePriority(
     typeof props.searchParams.priority === "string" ? props.searchParams.priority : undefined,
   );
@@ -105,9 +115,14 @@ export default async function Home(props: {
               Dashboard
             </Link>
             {isOwner ? (
-              <Link className={styles.link} href="/admin/users">
-                Admin
-              </Link>
+              <>
+                <Link className={styles.link} href="/admin/users">
+                  Users
+                </Link>
+                <Link className={styles.link} href="/admin/categories">
+                  Categories
+                </Link>
+              </>
             ) : null}
             <Link className={styles.link} href="/">
               Cases
@@ -165,11 +180,11 @@ export default async function Home(props: {
                 <label className={styles.label}>
                   Category
                   <select className={styles.select} name="category" defaultValue="GENERAL">
-                    <option value="GENERAL">GENERAL</option>
-                    <option value="BILLING">BILLING</option>
-                    <option value="TECHNICAL">TECHNICAL</option>
-                    <option value="ACCOUNT">ACCOUNT</option>
-                    <option value="OTHER">OTHER</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.slug}>
+                        {c.label}
+                      </option>
+                    ))}
                   </select>
                 </label>
                 <label className={styles.label}>
@@ -251,11 +266,11 @@ export default async function Home(props: {
                     Category
                     <select className={styles.select} name="category" defaultValue={category}>
                       <option value="ALL">ALL</option>
-                      <option value="GENERAL">GENERAL</option>
-                      <option value="BILLING">BILLING</option>
-                      <option value="TECHNICAL">TECHNICAL</option>
-                      <option value="ACCOUNT">ACCOUNT</option>
-                      <option value="OTHER">OTHER</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.slug}>
+                          {c.label}
+                        </option>
+                      ))}
                     </select>
                   </label>
                   <label className={styles.label}>

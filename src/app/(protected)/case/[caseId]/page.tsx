@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { addNoteAction, logoutAction, updateCaseMetaAction } from "@/app/actions";
 import { getCaseById, listAudits, listNotes } from "@/lib/cases";
+import { listCategories } from "@/lib/categories";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +60,7 @@ export default async function CasePage(props: {
 
   const notes = await listNotes(caseId);
   const audits = await listAudits(caseId, 30);
+  const categories = await listCategories({ includeInactive: true });
   let createdBy = "-";
   for (let i = audits.length - 1; i >= 0; i--) {
     if (audits[i]?.action === "CREATE") {
@@ -206,11 +208,11 @@ export default async function CasePage(props: {
                   name="category"
                   defaultValue={row.category}
                 >
-                  <option value="GENERAL">GENERAL</option>
-                  <option value="BILLING">BILLING</option>
-                  <option value="TECHNICAL">TECHNICAL</option>
-                  <option value="ACCOUNT">ACCOUNT</option>
-                  <option value="OTHER">OTHER</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.slug}>
+                      {c.label}
+                    </option>
+                  ))}
                 </select>
               </label>
               <div className={styles.buttonRow}>

@@ -79,9 +79,14 @@ export default async function DashboardPage() {
               Dashboard
             </Link>
             {isOwner ? (
-              <Link className={styles.link} href="/admin/users">
-                Admin
-              </Link>
+              <>
+                <Link className={styles.link} href="/admin/users">
+                  Users
+                </Link>
+                <Link className={styles.link} href="/admin/categories">
+                  Categories
+                </Link>
+              </>
             ) : null}
             <Link className={styles.link} href="/">
               Cases

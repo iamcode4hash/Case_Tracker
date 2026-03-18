@@ -60,8 +60,33 @@ export async function ensureSchema() {
 
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_created_at ON cases(created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_status_created_at ON cases(status, created_at DESC);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_cases_category_created_at ON cases(category, created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_starred_created_at ON cases(starred DESC, created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_case_notes_case_id_created_at ON case_notes(case_id, created_at DESC);`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS case_categories (
+      id BIGSERIAL PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_case_categories_active_sort ON case_categories(is_active DESC, sort_order ASC, label ASC);`;
+
+  await sql`
+    INSERT INTO case_categories (slug, label, sort_order)
+    VALUES
+      ('GENERAL','General',0),
+      ('BILLING','Billing',10),
+      ('TECHNICAL','Technical',20),
+      ('ACCOUNT','Account',30),
+      ('OTHER','Other',40)
+    ON CONFLICT (slug) DO NOTHING;
+  `;
 
   await sql`
     CREATE TABLE IF NOT EXISTS app_users (

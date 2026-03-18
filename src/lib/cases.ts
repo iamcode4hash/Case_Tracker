@@ -4,7 +4,7 @@ import { db, ensureSchema } from "@/lib/db";
 
 export type CaseStatus = "OPEN" | "PENDING" | "RESOLVED";
 
-export type CaseCategory = "GENERAL" | "BILLING" | "TECHNICAL" | "ACCOUNT" | "OTHER";
+export type CaseCategory = string;
 export type CasePriority = "LOW" | "NORMAL" | "HIGH" | "URGENT";
 
 export type CaseRow = {
@@ -47,7 +47,7 @@ export async function createCase(input: {
   memberContact?: string;
   subject: string;
   note: string;
-  category?: CaseCategory;
+  category?: string;
   priority?: CasePriority;
   actor?: string;
 }) {
@@ -70,8 +70,8 @@ export async function createCase(input: {
     if (!row) continue;
 
     await sql`
-      INSERT INTO case_notes (case_id, note)
-      VALUES (${caseId}, ${input.note});
+      INSERT INTO case_notes (case_id, note, actor)
+      VALUES (${caseId}, ${input.note}, ${input.actor ?? null});
     `;
 
     if (input.actor) {
@@ -149,7 +149,7 @@ export async function listCases(input: {
   limit?: number;
   q?: string;
   status?: CaseStatus | "ALL";
-  category?: CaseCategory | "ALL";
+  category?: string | "ALL";
   priority?: CasePriority | "ALL";
 }): Promise<CaseRow[]> {
   await ensureSchema();
@@ -323,7 +323,7 @@ export async function listAudits(caseId: string, limit = 30): Promise<CaseAuditR
 export async function updateCaseMeta(input: {
   caseId: string;
   status: CaseStatus;
-  category: CaseCategory;
+  category: string;
   priority: CasePriority;
   actor?: string;
 }) {
@@ -387,7 +387,7 @@ export async function bulkUpdateCases(input: {
   caseIds: string[];
   actor: string;
   status?: CaseStatus;
-  category?: CaseCategory;
+  category?: string;
   priority?: CasePriority;
 }) {
   await ensureSchema();

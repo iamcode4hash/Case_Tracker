@@ -12,11 +12,18 @@ import {
   setStarred,
   updateCaseMeta,
   updateStatus,
-  type CaseCategory,
   type CasePriority,
   type CaseStatus,
 } from "@/lib/cases";
 import { AUTH_COOKIE_NAME, authCookieValue, passwordsMatch } from "@/lib/auth";
+import {
+  createCategory,
+  deleteCategory,
+  resolveActiveCategorySlug,
+  resolveAnyCategorySlug,
+  setCategoryActive,
+  updateCategory,
+} from "@/lib/categories";
 import { getCurrentUser } from "@/lib/current-user";
 import { verifyPassword } from "@/lib/passwords";
 import {
@@ -36,12 +43,8 @@ import {
   updateUsername,
 } from "@/lib/users";
 
-function parseCategory(input: string): CaseCategory {
-  const v = input.trim().toUpperCase();
-  if (v === "GENERAL" || v === "BILLING" || v === "TECHNICAL" || v === "ACCOUNT" || v === "OTHER") {
-    return v;
-  }
-  return "GENERAL";
+async function parseCategorySlug(input: string, opts?: { includeInactive?: boolean }) {
+  return opts?.includeInactive ? resolveAnyCategorySlug(input) : resolveActiveCategorySlug(input);
 }
 
 function parsePriority(input: string): CasePriority {
@@ -65,7 +68,7 @@ export async function createCaseAction(formData: FormData) {
   const memberContact = String(formData.get("memberContact") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
-  const category = parseCategory(String(formData.get("category") ?? ""));
+  const category = await parseCategorySlug(String(formData.get("category") ?? ""));
   const priority = parsePriority(String(formData.get("priority") ?? ""));
 
   if (!subject) {
@@ -153,7 +156,9 @@ export async function updateCaseMetaAction(formData: FormData) {
     .trim()
     .toUpperCase();
   const status = String(formData.get("status") ?? "").trim().toUpperCase();
-  const category = parseCategory(String(formData.get("category") ?? ""));
+  const category = await parseCategorySlug(String(formData.get("category") ?? ""), {
+    includeInactive: true,
+  });
   const priority = parsePriority(String(formData.get("priority") ?? ""));
 
   if (!caseId) {
@@ -245,7 +250,7 @@ export async function bulkUpdateAction(formData: FormData) {
     statusRaw === "OPEN" || statusRaw === "PENDING" || statusRaw === "RESOLVED"
       ? (statusRaw as CaseStatus)
       : undefined;
-  const category = categoryRaw ? parseCategory(categoryRaw) : undefined;
+  const category = categoryRaw ? await parseCategorySlug(categoryRaw) : undefined;
   const priority = priorityRaw ? parsePriority(priorityRaw) : undefined;
 
   const actor = currentUser.username;
@@ -260,6 +265,95 @@ export async function bulkUpdateAction(formData: FormData) {
 
   revalidatePath("/");
   redirect("/");
+}
+
+export async function createCategoryAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const label = String(formData.get("label") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const sortOrderRaw = String(formData.get("sortOrder") ?? "").trim();
+  const sortOrder = sortOrderRaw ? Number(sortOrderRaw) : undefined;
+
+  try {
+    await createCategory({ label, slug: slug || undefined, sortOrder });
+  } catch {
+    redirect("/admin/categories?error=1");
+  }
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  redirect("/admin/categories");
+}
+
+export async function updateCategoryAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const id = Number(formData.get("id") ?? 0);
+  if (!id) redirect("/admin/categories?error=1");
+
+  const label = String(formData.get("label") ?? "").trim();
+  const slug = String(formData.get("slug") ?? "").trim();
+  const sortOrderRaw = String(formData.get("sortOrder") ?? "").trim();
+  const sortOrder = sortOrderRaw ? Number(sortOrderRaw) : undefined;
+
+  try {
+    await updateCategory({
+      id,
+      label: label || undefined,
+      slug: slug || undefined,
+      sortOrder,
+    });
+  } catch {
+    redirect("/admin/categories?error=1");
+  }
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  redirect("/admin/categories");
+}
+
+export async function toggleCategoryActiveAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const id = Number(formData.get("id") ?? 0);
+  const next = String(formData.get("isActive") ?? "").trim();
+  const isActive = next === "1";
+  if (!id) redirect("/admin/categories?error=1");
+
+  await setCategoryActive({ id, isActive });
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  redirect("/admin/categories");
+}
+
+export async function deleteCategoryAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const id = Number(formData.get("id") ?? 0);
+  if (!id) redirect("/admin/categories?error=1");
+
+  try {
+    await deleteCategory({ id });
+  } catch {
+    redirect("/admin/categories?error=1");
+  }
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/");
+  redirect("/admin/categories");
 }
 
 export async function unlockAction(formData: FormData) {
