@@ -1,6 +1,8 @@
 import { unlockAction } from "@/app/actions";
 import styles from "@/app/ui.module.css";
 
+export const dynamic = "force-dynamic";
+
 export default function UnlockPage(props: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {

@@ -1,6 +1,8 @@
 import { loginAction } from "@/app/actions";
 import styles from "@/app/ui.module.css";
 
+export const dynamic = "force-dynamic";
+
 export default function LoginPage(props: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
@@ -46,4 +48,3 @@ export default function LoginPage(props: {
     </div>
   );
 }
-
