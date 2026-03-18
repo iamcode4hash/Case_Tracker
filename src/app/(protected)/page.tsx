@@ -118,7 +118,7 @@ export default async function Home(props: {
           </div>
         ) : null}
 
-        <div className={styles.grid}>
+        <div className={styles.gridMain}>
           <section className={styles.card}>
             <div className={styles.cardTitle}>Create New Case</div>
             <form action={createCaseAction} className={styles.form}>
@@ -269,11 +269,22 @@ export default async function Home(props: {
               </div>
             </form>
 
-            <div style={{ height: 14 }} />
+            <div className={styles.hint}>
+              Use filters above to narrow down results, then manage cases in the table below.
+            </div>
+          </section>
 
-            <div className={styles.cardTitle}>Cases</div>
-            {cases.length ? (
-              <div className={styles.form}>
+          <section className={`${styles.card} ${styles.fullWidth}`}>
+            <div className={styles.cardHeaderRow}>
+              <div className={styles.cardTitleTight}>Cases</div>
+              <div className={styles.buttonRow}>
+                <span className={styles.pill}>{cases.length}</span>
+              </div>
+            </div>
+
+            <details className={styles.details}>
+              <summary className={styles.detailsSummary}>Bulk actions</summary>
+              <div className={styles.detailsBody}>
                 <form id="bulkForm" action={bulkUpdateAction} className={styles.form}>
                   <div className={styles.row2}>
                     <label className={styles.label}>
@@ -314,8 +325,13 @@ export default async function Home(props: {
                     <span className={styles.hint}>Select cases using the checkbox column</span>
                   </div>
                 </form>
+              </div>
+            </details>
 
-                <table className={styles.table}>
+            <div className={styles.divider} />
+
+            {cases.length ? (
+              <table className={styles.table}>
                 <thead>
                   <tr>
                     <th className={styles.th}></th>
@@ -382,13 +398,10 @@ export default async function Home(props: {
                     </tr>
                   ))}
                 </tbody>
-                </table>
-              </div>
+              </table>
             ) : (
               <div className={styles.hint}>
-                {dbError
-                  ? "Once the database is set up, recent cases will show here"
-                  : "No cases yet"}
+                {dbError ? "Once the database is set up, cases will show here" : "No cases yet"}
               </div>
             )}
           </section>
