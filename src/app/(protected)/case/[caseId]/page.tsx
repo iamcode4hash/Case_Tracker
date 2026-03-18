@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { addNoteAction, logoutAction, updateCaseMetaAction } from "@/app/actions";
-import { getCaseById, listNotes } from "@/lib/cases";
+import { getCaseById, listAudits, listNotes } from "@/lib/cases";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +58,7 @@ export default async function CasePage(props: {
   }
 
   const notes = await listNotes(caseId);
+  const audits = await listAudits(caseId, 30);
 
   const dtf = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -244,6 +245,50 @@ export default async function CasePage(props: {
               </table>
             ) : (
               <div className={styles.hint}>No notes yet</div>
+            )}
+
+            <div style={{ height: 14 }} />
+
+            <div className={styles.cardTitle}>Audit Log</div>
+            {audits.length ? (
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th className={styles.th}>Time</th>
+                    <th className={styles.th}>Actor</th>
+                    <th className={styles.th}>Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {audits.map((a) => {
+                    const parts: string[] = [];
+                    if (a.from_status !== a.to_status && a.to_status) {
+                      parts.push(`Status: ${a.from_status ?? "-"} → ${a.to_status}`);
+                    }
+                    if (a.from_priority !== a.to_priority && a.to_priority) {
+                      parts.push(`Priority: ${a.from_priority ?? "-"} → ${a.to_priority}`);
+                    }
+                    if (a.from_category !== a.to_category && a.to_category) {
+                      parts.push(`Category: ${a.from_category ?? "-"} → ${a.to_category}`);
+                    }
+                    if (a.from_starred !== a.to_starred && a.to_starred !== null) {
+                      parts.push(`Starred: ${String(a.from_starred)} → ${String(a.to_starred)}`);
+                    }
+
+                    return (
+                      <tr key={a.id} className={styles.tr}>
+                        <td className={styles.td}>{dtf.format(new Date(a.created_at))}</td>
+                        <td className={styles.td}>{a.actor}</td>
+                        <td className={styles.td}>
+                          {parts.length ? parts.join(" · ") : a.action}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <div className={styles.hint}>No audit entries yet</div>
             )}
           </section>
         </div>

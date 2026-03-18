@@ -1,5 +1,7 @@
 import postgres from "postgres";
 
+import { hashPassword } from "@/lib/passwords";
+
 let sqlClient: ReturnType<typeof postgres> | null = null;
 let schemaReady = false;
 
@@ -34,6 +36,7 @@ export async function ensureSchema() {
       status TEXT NOT NULL DEFAULT 'OPEN',
       category TEXT NOT NULL DEFAULT 'GENERAL',
       priority TEXT NOT NULL DEFAULT 'NORMAL',
+      starred BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -41,6 +44,7 @@ export async function ensureSchema() {
 
   await sql`ALTER TABLE cases ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'GENERAL';`;
   await sql`ALTER TABLE cases ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT 'NORMAL';`;
+  await sql`ALTER TABLE cases ADD COLUMN IF NOT EXISTS starred BOOLEAN NOT NULL DEFAULT FALSE;`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS case_notes (
@@ -53,7 +57,64 @@ export async function ensureSchema() {
 
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_created_at ON cases(created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_status_created_at ON cases(status, created_at DESC);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_cases_starred_created_at ON cases(starred DESC, created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_case_notes_case_id_created_at ON case_notes(case_id, created_at DESC);`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS app_users (
+      id BIGSERIAL PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'AGENT',
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS app_sessions (
+      id BIGSERIAL PRIMARY KEY,
+      user_id BIGINT NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
+      session_token TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_app_sessions_token ON app_sessions(session_token);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_app_sessions_expires ON app_sessions(expires_at);`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS case_audits (
+      id BIGSERIAL PRIMARY KEY,
+      case_id TEXT NOT NULL REFERENCES cases(case_id) ON DELETE CASCADE,
+      actor TEXT NOT NULL,
+      action TEXT NOT NULL,
+      from_status TEXT,
+      to_status TEXT,
+      from_category TEXT,
+      to_category TEXT,
+      from_priority TEXT,
+      to_priority TEXT,
+      from_starred BOOLEAN,
+      to_starred BOOLEAN,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `;
+
+  await sql`CREATE INDEX IF NOT EXISTS idx_case_audits_case_id_created_at ON case_audits(case_id, created_at DESC);`;
+
+  const initialOwnerPassword = process.env.INITIAL_OWNER_PASSWORD;
+  if (initialOwnerPassword) {
+    const initialOwnerUsername = (process.env.INITIAL_OWNER_USERNAME ?? "owner").trim();
+    const initialOwnerRole = "OWNER";
+    const initialOwnerPasswordHash = hashPassword(initialOwnerPassword);
+    await sql`
+      INSERT INTO app_users (username, password_hash, role)
+      VALUES (${initialOwnerUsername}, ${initialOwnerPasswordHash}, ${initialOwnerRole})
+      ON CONFLICT (username) DO NOTHING;
+    `;
+  }
 
   schemaReady = true;
 }

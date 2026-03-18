@@ -1,6 +1,14 @@
 import Link from "next/link";
 
-import { createCaseAction, goToCaseAction, logoutAction } from "@/app/actions";
+import {
+  bulkUpdateAction,
+  createCaseAction,
+  goToCaseAction,
+  logoutAction,
+  quickStatusAction,
+  toggleStarAction,
+} from "@/app/actions";
+import { getCurrentUser } from "@/lib/current-user";
 import {
   listCases,
   type CaseCategory,
@@ -48,6 +56,7 @@ function priorityPillClass(priority: string) {
 export default async function Home(props: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
+  const current = await getCurrentUser();
   const q = typeof props.searchParams.q === "string" ? props.searchParams.q : "";
   const status = parseStatus(typeof props.searchParams.status === "string" ? props.searchParams.status : undefined);
   const category = parseCategory(
@@ -72,7 +81,7 @@ export default async function Home(props: {
     dbError = e instanceof Error ? e.message : "Database error";
   }
 
-  const hasPassword = Boolean(process.env.APP_PASSWORD);
+  const isOwner = current?.role === "OWNER";
 
   return (
     <div className={styles.shell}>
@@ -87,15 +96,19 @@ export default async function Home(props: {
               </div>
             </div>
           </div>
-          {hasPassword ? (
+          <div className={styles.buttonRow}>
+            {isOwner ? (
+              <Link className={styles.link} href="/admin/users">
+                Admin
+              </Link>
+            ) : null}
+            {current ? <span className={styles.pill}>{current.username}</span> : null}
             <form action={logoutAction}>
               <button className={styles.buttonSecondary} type="submit">
                 Lock
               </button>
             </form>
-          ) : (
-            <span className={`${styles.pill} ${styles.pillYellow}`}>Public</span>
-          )}
+          </div>
         </header>
 
         {dbError ? (
@@ -260,19 +273,76 @@ export default async function Home(props: {
 
             <div className={styles.cardTitle}>Cases</div>
             {cases.length ? (
-              <table className={styles.table}>
+              <div className={styles.form}>
+                <form id="bulkForm" action={bulkUpdateAction} className={styles.form}>
+                  <div className={styles.row2}>
+                    <label className={styles.label}>
+                      Bulk Status
+                      <select className={styles.select} name="bulkStatus" defaultValue="">
+                        <option value="">No change</option>
+                        <option value="OPEN">OPEN</option>
+                        <option value="PENDING">PENDING</option>
+                        <option value="RESOLVED">RESOLVED</option>
+                      </select>
+                    </label>
+                    <label className={styles.label}>
+                      Bulk Priority
+                      <select className={styles.select} name="bulkPriority" defaultValue="">
+                        <option value="">No change</option>
+                        <option value="LOW">LOW</option>
+                        <option value="NORMAL">NORMAL</option>
+                        <option value="HIGH">HIGH</option>
+                        <option value="URGENT">URGENT</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label className={styles.label}>
+                    Bulk Category
+                    <select className={styles.select} name="bulkCategory" defaultValue="">
+                      <option value="">No change</option>
+                      <option value="GENERAL">GENERAL</option>
+                      <option value="BILLING">BILLING</option>
+                      <option value="TECHNICAL">TECHNICAL</option>
+                      <option value="ACCOUNT">ACCOUNT</option>
+                      <option value="OTHER">OTHER</option>
+                    </select>
+                  </label>
+                  <div className={styles.buttonRow}>
+                    <button className={styles.buttonSecondary} type="submit">
+                      Apply to selected
+                    </button>
+                    <span className={styles.hint}>Select cases using the checkbox column</span>
+                  </div>
+                </form>
+
+                <table className={styles.table}>
                 <thead>
                   <tr>
+                    <th className={styles.th}></th>
+                    <th className={styles.th}>Star</th>
                     <th className={styles.th}>Case</th>
                     <th className={styles.th}>Status</th>
                     <th className={styles.th}>Priority</th>
                     <th className={styles.th}>Category</th>
                     <th className={styles.th}>Subject</th>
+                    <th className={styles.th}>Quick</th>
                   </tr>
                 </thead>
                 <tbody>
                   {cases.map((c) => (
                     <tr key={c.case_id} className={styles.tr}>
+                      <td className={styles.td}>
+                        <input type="checkbox" name="caseIds" value={c.case_id} form="bulkForm" />
+                      </td>
+                      <td className={styles.td}>
+                        <form action={toggleStarAction}>
+                          <input type="hidden" name="caseId" value={c.case_id} />
+                          <input type="hidden" name="starred" value={c.starred ? "0" : "1"} />
+                          <button className={styles.iconButton} type="submit" title="Star">
+                            {c.starred ? "★" : "☆"}
+                          </button>
+                        </form>
+                      </td>
                       <td className={styles.td}>
                         <Link
                           className={`${styles.link} ${styles.mono}`}
@@ -291,10 +361,29 @@ export default async function Home(props: {
                         <span className={styles.pill}>{c.category}</span>
                       </td>
                       <td className={styles.td}>{c.subject}</td>
+                      <td className={styles.td}>
+                        <div className={styles.buttonRow}>
+                          <form action={quickStatusAction}>
+                            <input type="hidden" name="caseId" value={c.case_id} />
+                            <input type="hidden" name="status" value="PENDING" />
+                            <button className={styles.buttonTiny} type="submit">
+                              Pending
+                            </button>
+                          </form>
+                          <form action={quickStatusAction}>
+                            <input type="hidden" name="caseId" value={c.case_id} />
+                            <input type="hidden" name="status" value="RESOLVED" />
+                            <button className={styles.buttonTiny} type="submit">
+                              Resolve
+                            </button>
+                          </form>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             ) : (
               <div className={styles.hint}>
                 {dbError

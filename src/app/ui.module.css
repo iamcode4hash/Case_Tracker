@@ -156,6 +156,53 @@
   transform: translateY(0px);
 }
 
+.buttonTiny {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8ebff;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 680;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.buttonTiny:hover {
+  transform: translateY(-1px);
+}
+
+.buttonTiny:active {
+  transform: translateY(0px);
+}
+
+.iconButton {
+  width: 34px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8ebff;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.iconButton:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.iconButton:active {
+  transform: translateY(0px);
+}
+
+.muted {
+  color: rgba(232, 235, 255, 0.7);
+}
+
 .hint {
   font-size: 12px;
   color: rgba(232, 235, 255, 0.7);

@@ -6,7 +6,10 @@ import { cookies } from "next/headers";
 
 import {
   addNote,
+  bulkUpdateCases,
   createCase,
+  getCaseById,
+  setStarred,
   updateCaseMeta,
   updateStatus,
   type CaseCategory,
@@ -14,6 +17,10 @@ import {
   type CaseStatus,
 } from "@/lib/cases";
 import { AUTH_COOKIE_NAME, authCookieValue, passwordsMatch } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/current-user";
+import { verifyPassword } from "@/lib/passwords";
+import { clearSessionCookie, createSession, type UserRole } from "@/lib/sessions";
+import { createUser, findUserByUsername } from "@/lib/users";
 
 function parseCategory(input: string): CaseCategory {
   const v = input.trim().toUpperCase();
@@ -31,7 +38,15 @@ function parsePriority(input: string): CasePriority {
   return "NORMAL";
 }
 
+async function requireWriteAccess() {
+  const current = await getCurrentUser();
+  if (!current) redirect(process.env.APP_PASSWORD ? "/unlock" : "/login");
+  if (current.role === "VIEWER") redirect("/");
+  return current;
+}
+
 export async function createCaseAction(formData: FormData) {
+  await requireWriteAccess();
   const memberName = String(formData.get("memberName") ?? "").trim();
   const memberContact = String(formData.get("memberContact") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
@@ -68,6 +83,7 @@ export async function goToCaseAction(formData: FormData) {
 }
 
 export async function addNoteAction(formData: FormData) {
+  await requireWriteAccess();
   const caseId = String(formData.get("caseId") ?? "")
     .trim()
     .toUpperCase();
@@ -84,6 +100,7 @@ export async function addNoteAction(formData: FormData) {
 }
 
 export async function updateStatusAction(formData: FormData) {
+  await requireWriteAccess();
   const caseId = String(formData.get("caseId") ?? "")
     .trim()
     .toUpperCase();
@@ -97,12 +114,26 @@ export async function updateStatusAction(formData: FormData) {
     throw new Error("Invalid status");
   }
 
-  await updateStatus(caseId, status as CaseStatus);
+  const current = await getCurrentUser();
+  const actor = current?.username ?? "unknown";
+  const before = await getCaseById(caseId);
+  if (before) {
+    await updateCaseMeta({
+      caseId,
+      status: status as CaseStatus,
+      category: before.category,
+      priority: before.priority,
+      actor,
+    });
+  } else {
+    await updateStatus(caseId, status as CaseStatus);
+  }
   revalidatePath(`/case/${caseId}`);
   redirect(`/case/${encodeURIComponent(caseId)}`);
 }
 
 export async function updateCaseMetaAction(formData: FormData) {
+  const currentUser = await requireWriteAccess();
   const caseId = String(formData.get("caseId") ?? "")
     .trim()
     .toUpperCase();
@@ -117,15 +148,103 @@ export async function updateCaseMetaAction(formData: FormData) {
     throw new Error("Invalid status");
   }
 
+  const actor = currentUser.username;
+
   await updateCaseMeta({
     caseId,
     status: status as CaseStatus,
     category,
     priority,
+    actor,
   });
 
   revalidatePath(`/case/${caseId}`);
   redirect(`/case/${encodeURIComponent(caseId)}`);
+}
+
+export async function toggleStarAction(formData: FormData) {
+  const currentUser = await requireWriteAccess();
+  const caseId = String(formData.get("caseId") ?? "")
+    .trim()
+    .toUpperCase();
+  const next = String(formData.get("starred") ?? "").trim();
+  const starred = next === "1";
+
+  if (!caseId) {
+    redirect("/");
+  }
+
+  const actor = currentUser.username;
+
+  await setStarred({ caseId, starred, actor });
+  revalidatePath("/");
+  redirect("/");
+}
+
+export async function quickStatusAction(formData: FormData) {
+  const currentUser = await requireWriteAccess();
+  const caseId = String(formData.get("caseId") ?? "")
+    .trim()
+    .toUpperCase();
+  const status = String(formData.get("status") ?? "").trim().toUpperCase();
+
+  if (!caseId) {
+    redirect("/");
+  }
+  if (status !== "OPEN" && status !== "PENDING" && status !== "RESOLVED") {
+    redirect("/");
+  }
+
+  const actor = currentUser.username;
+  const before = await getCaseById(caseId);
+  if (!before) redirect("/");
+
+  await updateCaseMeta({
+    caseId,
+    status: status as CaseStatus,
+    category: before.category,
+    priority: before.priority,
+    actor,
+  });
+
+  revalidatePath("/");
+  redirect("/");
+}
+
+export async function bulkUpdateAction(formData: FormData) {
+  const currentUser = await requireWriteAccess();
+  const ids = formData
+    .getAll("caseIds")
+    .map((v) => String(v).trim().toUpperCase())
+    .filter(Boolean);
+
+  if (!ids.length) {
+    redirect("/");
+  }
+
+  const statusRaw = String(formData.get("bulkStatus") ?? "").trim().toUpperCase();
+  const categoryRaw = String(formData.get("bulkCategory") ?? "").trim();
+  const priorityRaw = String(formData.get("bulkPriority") ?? "").trim();
+
+  const status =
+    statusRaw === "OPEN" || statusRaw === "PENDING" || statusRaw === "RESOLVED"
+      ? (statusRaw as CaseStatus)
+      : undefined;
+  const category = categoryRaw ? parseCategory(categoryRaw) : undefined;
+  const priority = priorityRaw ? parsePriority(priorityRaw) : undefined;
+
+  const actor = currentUser.username;
+
+  await bulkUpdateCases({
+    caseIds: ids,
+    actor,
+    status,
+    category,
+    priority,
+  });
+
+  revalidatePath("/");
+  redirect("/");
 }
 
 export async function unlockAction(formData: FormData) {
@@ -158,5 +277,54 @@ export async function unlockAction(formData: FormData) {
 export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete(AUTH_COOKIE_NAME);
-  redirect("/unlock");
+  await clearSessionCookie();
+  redirect(process.env.APP_PASSWORD ? "/unlock" : "/login");
+}
+
+export async function loginAction(formData: FormData) {
+  const username = String(formData.get("username") ?? "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  if (!username || !password) {
+    redirect("/login?error=1");
+  }
+
+  const user = await findUserByUsername(username);
+  if (!user || !user.is_active) {
+    redirect("/login?error=1");
+  }
+
+  if (!verifyPassword(password, user.password_hash)) {
+    redirect("/login?error=1");
+  }
+
+  await createSession(user.id, 60 * 60 * 24 * 30);
+  redirect("/");
+}
+
+function parseRole(input: string): UserRole {
+  const v = input.trim().toUpperCase();
+  if (v === "OWNER" || v === "AGENT" || v === "VIEWER") return v;
+  return "AGENT";
+}
+
+export async function createUserAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const username = String(formData.get("username") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const role = parseRole(String(formData.get("role") ?? ""));
+
+  if (!username.trim() || password.length < 6) {
+    redirect("/admin/users?error=1");
+  }
+
+  await createUser({ username, password, role });
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
 }
