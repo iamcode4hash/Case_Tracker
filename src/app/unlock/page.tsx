@@ -42,9 +42,6 @@ export default function UnlockPage(props: {
               <button className={styles.button} type="submit">
                 Enter
               </button>
-              <div className={styles.hint}>
-                This screen appears when <span className={styles.mono}>APP_PASSWORD</span> is set in your environment variables
-              </div>
             </div>
           </form>
         </section>
