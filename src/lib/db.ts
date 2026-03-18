@@ -1,6 +1,6 @@
-import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 
-let sqlClient: ReturnType<typeof neon> | null = null;
+let sqlClient: ReturnType<typeof postgres> | null = null;
 let schemaReady = false;
 
 function getSql() {
@@ -10,7 +10,11 @@ function getSql() {
   }
 
   if (!sqlClient) {
-    sqlClient = neon(databaseUrl);
+    sqlClient = postgres(databaseUrl, {
+      ssl: "require",
+      max: 1,
+      idle_timeout: 20,
+    });
   }
 
   return sqlClient;
