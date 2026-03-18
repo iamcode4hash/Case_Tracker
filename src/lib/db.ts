@@ -32,10 +32,15 @@ export async function ensureSchema() {
       member_contact TEXT,
       subject TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'OPEN',
+      category TEXT NOT NULL DEFAULT 'GENERAL',
+      priority TEXT NOT NULL DEFAULT 'NORMAL',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
+
+  await sql`ALTER TABLE cases ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'GENERAL';`;
+  await sql`ALTER TABLE cases ADD COLUMN IF NOT EXISTS priority TEXT NOT NULL DEFAULT 'NORMAL';`;
 
   await sql`
     CREATE TABLE IF NOT EXISTS case_notes (
@@ -47,6 +52,7 @@ export async function ensureSchema() {
   `;
 
   await sql`CREATE INDEX IF NOT EXISTS idx_cases_created_at ON cases(created_at DESC);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_cases_status_created_at ON cases(status, created_at DESC);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_case_notes_case_id_created_at ON case_notes(case_id, created_at DESC);`;
 
   schemaReady = true;

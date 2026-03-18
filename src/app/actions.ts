@@ -4,14 +4,40 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-import { addNote, createCase, updateStatus, type CaseStatus } from "@/lib/cases";
+import {
+  addNote,
+  createCase,
+  updateCaseMeta,
+  updateStatus,
+  type CaseCategory,
+  type CasePriority,
+  type CaseStatus,
+} from "@/lib/cases";
 import { AUTH_COOKIE_NAME, authCookieValue, passwordsMatch } from "@/lib/auth";
+
+function parseCategory(input: string): CaseCategory {
+  const v = input.trim().toUpperCase();
+  if (v === "GENERAL" || v === "BILLING" || v === "TECHNICAL" || v === "ACCOUNT" || v === "OTHER") {
+    return v;
+  }
+  return "GENERAL";
+}
+
+function parsePriority(input: string): CasePriority {
+  const v = input.trim().toUpperCase();
+  if (v === "LOW" || v === "NORMAL" || v === "HIGH" || v === "URGENT") {
+    return v;
+  }
+  return "NORMAL";
+}
 
 export async function createCaseAction(formData: FormData) {
   const memberName = String(formData.get("memberName") ?? "").trim();
   const memberContact = String(formData.get("memberContact") ?? "").trim();
   const subject = String(formData.get("subject") ?? "").trim();
   const note = String(formData.get("note") ?? "").trim();
+  const category = parseCategory(String(formData.get("category") ?? ""));
+  const priority = parsePriority(String(formData.get("priority") ?? ""));
 
   if (!subject) {
     throw new Error("Subject is required");
@@ -25,6 +51,8 @@ export async function createCaseAction(formData: FormData) {
     memberContact: memberContact || undefined,
     subject,
     note,
+    category,
+    priority,
   });
 
   revalidatePath("/");
@@ -35,7 +63,7 @@ export async function goToCaseAction(formData: FormData) {
   const caseId = String(formData.get("caseId") ?? "")
     .trim()
     .toUpperCase();
-  if (!caseId) return;
+  if (!caseId || caseId === "UNDEFINED") return;
   redirect(`/case/${encodeURIComponent(caseId)}`);
 }
 
@@ -70,6 +98,32 @@ export async function updateStatusAction(formData: FormData) {
   }
 
   await updateStatus(caseId, status as CaseStatus);
+  revalidatePath(`/case/${caseId}`);
+  redirect(`/case/${encodeURIComponent(caseId)}`);
+}
+
+export async function updateCaseMetaAction(formData: FormData) {
+  const caseId = String(formData.get("caseId") ?? "")
+    .trim()
+    .toUpperCase();
+  const status = String(formData.get("status") ?? "").trim().toUpperCase();
+  const category = parseCategory(String(formData.get("category") ?? ""));
+  const priority = parsePriority(String(formData.get("priority") ?? ""));
+
+  if (!caseId) {
+    throw new Error("caseId is required");
+  }
+  if (status !== "OPEN" && status !== "PENDING" && status !== "RESOLVED") {
+    throw new Error("Invalid status");
+  }
+
+  await updateCaseMeta({
+    caseId,
+    status: status as CaseStatus,
+    category,
+    priority,
+  });
+
   revalidatePath(`/case/${caseId}`);
   redirect(`/case/${encodeURIComponent(caseId)}`);
 }

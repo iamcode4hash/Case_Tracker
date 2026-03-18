@@ -1,17 +1,59 @@
 import Link from "next/link";
 
 import { createCaseAction, goToCaseAction, logoutAction } from "@/app/actions";
-import { listRecentCases } from "@/lib/cases";
+import {
+  listCases,
+  type CaseCategory,
+  type CasePriority,
+  type CaseStatus,
+} from "@/lib/cases";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
-  let recentCases: Awaited<ReturnType<typeof listRecentCases>> = [];
+function parseStatus(value: string | undefined): CaseStatus | "ALL" {
+  const v = (value ?? "").trim().toUpperCase();
+  if (v === "OPEN" || v === "PENDING" || v === "RESOLVED") return v;
+  return "ALL";
+}
+
+function parseCategory(value: string | undefined): CaseCategory | "ALL" {
+  const v = (value ?? "").trim().toUpperCase();
+  if (v === "GENERAL" || v === "BILLING" || v === "TECHNICAL" || v === "ACCOUNT" || v === "OTHER") {
+    return v;
+  }
+  return "ALL";
+}
+
+function parsePriority(value: string | undefined): CasePriority | "ALL" {
+  const v = (value ?? "").trim().toUpperCase();
+  if (v === "LOW" || v === "NORMAL" || v === "HIGH" || v === "URGENT") return v;
+  return "ALL";
+}
+
+export default async function Home(props: {
+  searchParams: Record<string, string | string[] | undefined>;
+}) {
+  const q = typeof props.searchParams.q === "string" ? props.searchParams.q : "";
+  const status = parseStatus(typeof props.searchParams.status === "string" ? props.searchParams.status : undefined);
+  const category = parseCategory(
+    typeof props.searchParams.category === "string" ? props.searchParams.category : undefined,
+  );
+  const priority = parsePriority(
+    typeof props.searchParams.priority === "string" ? props.searchParams.priority : undefined,
+  );
+
+  let cases: Awaited<ReturnType<typeof listCases>> = [];
   let dbError: string | null = null;
 
   try {
-    recentCases = await listRecentCases(20);
+    cases = await listCases({
+      limit: 50,
+      q,
+      status,
+      category,
+      priority,
+    });
   } catch (e) {
     dbError = e instanceof Error ? e.message : "Database error";
   }
@@ -79,6 +121,28 @@ export default async function Home() {
                 />
               </label>
 
+              <div className={styles.row2}>
+                <label className={styles.label}>
+                  Category
+                  <select className={styles.select} name="category" defaultValue="GENERAL">
+                    <option value="GENERAL">GENERAL</option>
+                    <option value="BILLING">BILLING</option>
+                    <option value="TECHNICAL">TECHNICAL</option>
+                    <option value="ACCOUNT">ACCOUNT</option>
+                    <option value="OTHER">OTHER</option>
+                  </select>
+                </label>
+                <label className={styles.label}>
+                  Priority
+                  <select className={styles.select} name="priority" defaultValue="NORMAL">
+                    <option value="LOW">LOW</option>
+                    <option value="NORMAL">NORMAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="URGENT">URGENT</option>
+                  </select>
+                </label>
+              </div>
+
               <label className={styles.label}>
                 Note (initial)
                 <textarea
@@ -101,40 +165,96 @@ export default async function Home() {
           </section>
 
           <section className={styles.card}>
-            <div className={styles.cardTitle}>Find by Case ID</div>
+            <div className={styles.cardTitle}>Find & Filter</div>
             <form action={goToCaseAction} className={styles.form}>
               <label className={styles.label}>
-                Case ID
+                Open Case by ID
                 <input
                   className={styles.input}
                   name="caseId"
-                  placeholder="e.g. CS-20260318-1A2B3C"
+                  placeholder="CS-20260318-1A2B3C"
                 />
               </label>
               <div className={styles.buttonRow}>
                 <button className={styles.buttonSecondary} type="submit">
-                  Open Case
+                  Open
                 </button>
-                <div className={styles.hint}>
-                  Give this Case ID to the customer
-                </div>
+              </div>
+            </form>
+
+            <div style={{ height: 10 }} />
+
+            <form className={styles.form} method="get">
+              <label className={styles.label}>
+                Search (Case ID / Subject / Member / Contact)
+                <input
+                  className={styles.input}
+                  name="q"
+                  defaultValue={q}
+                  placeholder="Type keywords..."
+                />
+              </label>
+
+              <div className={styles.row2}>
+                <label className={styles.label}>
+                  Status
+                  <select className={styles.select} name="status" defaultValue={status}>
+                    <option value="ALL">ALL</option>
+                    <option value="OPEN">OPEN</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="RESOLVED">RESOLVED</option>
+                  </select>
+                </label>
+                <label className={styles.label}>
+                  Category
+                  <select className={styles.select} name="category" defaultValue={category}>
+                    <option value="ALL">ALL</option>
+                    <option value="GENERAL">GENERAL</option>
+                    <option value="BILLING">BILLING</option>
+                    <option value="TECHNICAL">TECHNICAL</option>
+                    <option value="ACCOUNT">ACCOUNT</option>
+                    <option value="OTHER">OTHER</option>
+                  </select>
+                </label>
+              </div>
+
+              <label className={styles.label}>
+                Priority
+                <select className={styles.select} name="priority" defaultValue={priority}>
+                  <option value="ALL">ALL</option>
+                  <option value="LOW">LOW</option>
+                  <option value="NORMAL">NORMAL</option>
+                  <option value="HIGH">HIGH</option>
+                  <option value="URGENT">URGENT</option>
+                </select>
+              </label>
+
+              <div className={styles.buttonRow}>
+                <button className={styles.buttonSecondary} type="submit">
+                  Apply
+                </button>
+                <Link className={styles.link} href="/">
+                  Reset
+                </Link>
               </div>
             </form>
 
             <div style={{ height: 14 }} />
 
-            <div className={styles.cardTitle}>Recent Cases</div>
-            {recentCases.length ? (
+            <div className={styles.cardTitle}>Cases</div>
+            {cases.length ? (
               <table className={styles.table}>
                 <thead>
                   <tr>
                     <th className={styles.th}>Case</th>
                     <th className={styles.th}>Status</th>
+                    <th className={styles.th}>Priority</th>
+                    <th className={styles.th}>Category</th>
                     <th className={styles.th}>Subject</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentCases.map((c) => (
+                  {cases.map((c) => (
                     <tr key={c.case_id}>
                       <td className={styles.td}>
                         <Link
@@ -146,6 +266,12 @@ export default async function Home() {
                       </td>
                       <td className={styles.td}>
                         <span className={styles.pill}>{c.status}</span>
+                      </td>
+                      <td className={styles.td}>
+                        <span className={styles.pill}>{c.priority}</span>
+                      </td>
+                      <td className={styles.td}>
+                        <span className={styles.pill}>{c.category}</span>
                       </td>
                       <td className={styles.td}>{c.subject}</td>
                     </tr>

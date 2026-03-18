@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { addNoteAction, logoutAction, updateStatusAction } from "@/app/actions";
+import { addNoteAction, logoutAction, updateCaseMetaAction } from "@/app/actions";
 import { getCaseById, listNotes } from "@/lib/cases";
 import styles from "@/app/ui.module.css";
 
@@ -93,6 +93,18 @@ export default async function CasePage(props: {
                   </td>
                 </tr>
                 <tr>
+                  <td className={styles.td}>Priority</td>
+                  <td className={styles.td}>
+                    <span className={styles.pill}>{row.priority}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td className={styles.td}>Category</td>
+                  <td className={styles.td}>
+                    <span className={styles.pill}>{row.category}</span>
+                  </td>
+                </tr>
+                <tr>
                   <td className={styles.td}>Subject</td>
                   <td className={styles.td}>{row.subject}</td>
                 </tr>
@@ -115,19 +127,49 @@ export default async function CasePage(props: {
 
             <div style={{ height: 14 }} />
 
-            <div className={styles.cardTitle}>Update Status</div>
-            <form className={styles.form} action={updateStatusAction}>
+            <div className={styles.cardTitle}>Update</div>
+            <form className={styles.form} action={updateCaseMetaAction}>
               <input type="hidden" name="caseId" value={row.case_id} />
+              <div className={styles.row2}>
+                <label className={styles.label}>
+                  Status
+                  <select
+                    className={styles.select}
+                    name="status"
+                    defaultValue={row.status}
+                  >
+                    <option value="OPEN">OPEN</option>
+                    <option value="PENDING">PENDING</option>
+                    <option value="RESOLVED">RESOLVED</option>
+                  </select>
+                </label>
+                <label className={styles.label}>
+                  Priority
+                  <select
+                    className={styles.select}
+                    name="priority"
+                    defaultValue={row.priority}
+                  >
+                    <option value="LOW">LOW</option>
+                    <option value="NORMAL">NORMAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="URGENT">URGENT</option>
+                  </select>
+                </label>
+              </div>
+
               <label className={styles.label}>
-                Status
+                Category
                 <select
                   className={styles.select}
-                  name="status"
-                  defaultValue={row.status}
+                  name="category"
+                  defaultValue={row.category}
                 >
-                  <option value="OPEN">OPEN</option>
-                  <option value="PENDING">PENDING</option>
-                  <option value="RESOLVED">RESOLVED</option>
+                  <option value="GENERAL">GENERAL</option>
+                  <option value="BILLING">BILLING</option>
+                  <option value="TECHNICAL">TECHNICAL</option>
+                  <option value="ACCOUNT">ACCOUNT</option>
+                  <option value="OTHER">OTHER</option>
                 </select>
               </label>
               <div className={styles.buttonRow}>
