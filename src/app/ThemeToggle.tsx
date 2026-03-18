@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import styles from "@/app/ui.module.css";
+
 type Theme = "dark" | "light";
 
 function getInitialTheme(): Theme {
@@ -25,20 +27,10 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme((t) => (t === "dark" ? "light" : "dark"))}
-      style={{
-        border: "1px solid rgba(255,255,255,0.16)",
-        background: "rgba(255,255,255,0.08)",
-        color: "var(--ct-fg)",
-        padding: "10px 12px",
-        borderRadius: 10,
-        cursor: "pointer",
-        fontSize: 14,
-        fontWeight: 680,
-      }}
+      className={styles.themeButton}
       aria-label="Toggle theme"
     >
       {theme === "dark" ? "Light" : "Night"}
     </button>
   );
 }
-

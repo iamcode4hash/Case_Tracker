@@ -1,5 +1,6 @@
 :root {
   --ct-fg: #e8ebff;
+  --ct-muted: rgba(232, 235, 255, 0.72);
   --ct-shell-bg: radial-gradient(1200px 600px at 20% 0%, rgba(75, 102, 255, 0.22), rgba(11, 16, 32, 0) 60%),
     radial-gradient(900px 520px at 90% 12%, rgba(34, 211, 238, 0.12), rgba(11, 16, 32, 0) 55%),
     #0b1020;
@@ -14,6 +15,7 @@
 
 html[data-theme="light"] {
   --ct-fg: #0b1020;
+  --ct-muted: rgba(11, 16, 32, 0.72);
   --ct-shell-bg: radial-gradient(1200px 600px at 18% 0%, rgba(75, 102, 255, 0.18), rgba(255, 255, 255, 0) 60%),
     radial-gradient(900px 520px at 92% 12%, rgba(34, 211, 238, 0.14), rgba(255, 255, 255, 0) 55%),
     #f7f8ff;
