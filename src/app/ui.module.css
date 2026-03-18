@@ -1,0 +1,183 @@
+.shell {
+  min-height: 100vh;
+  padding: 28px 18px 60px;
+  background: #0b1020;
+  color: #e8ebff;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.3px;
+}
+
+.subtitle {
+  color: rgba(232, 235, 255, 0.75);
+  font-size: 13px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 650;
+  margin-bottom: 10px;
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+}
+
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.label {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(232, 235, 255, 0.78);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.2);
+  color: #e8ebff;
+  padding: 10px 11px;
+  font-size: 14px;
+  outline: none;
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.button {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #4b66ff;
+  color: #0b1020;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 650;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.buttonSecondary {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8ebff;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 650;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.hint {
+  font-size: 12px;
+  color: rgba(232, 235, 255, 0.7);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.th,
+.td {
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+}
+
+.th {
+  text-align: left;
+  color: rgba(232, 235, 255, 0.75);
+  font-weight: 650;
+}
+
+.link {
+  color: #b9c4ff;
+  text-decoration: underline;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.notice {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(75, 102, 255, 0.35);
+  background: rgba(75, 102, 255, 0.12);
+  color: rgba(232, 235, 255, 0.92);
+  font-size: 13px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.mono {
+  font-family: var(--font-geist-mono);
+  letter-spacing: 0.2px;
+}
+
+@media (max-width: 900px) {
+  .grid,
+  .split,
+  .row2 {
+    grid-template-columns: 1fr;
+  }
+}
+
