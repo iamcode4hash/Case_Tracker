@@ -7,11 +7,13 @@ import styles from "@/app/ui.module.css";
 export const dynamic = "force-dynamic";
 
 export default async function CasePage(props: {
-  params: { caseId: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: { caseId: string } | Promise<{ caseId: string }>;
+  searchParams:
+    | Record<string, string | string[] | undefined>
+    | Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { caseId: rawCaseId } = props.params;
-  const searchParams = props.searchParams;
+  const { caseId: rawCaseId } = await props.params;
+  const searchParams = await props.searchParams;
 
   const caseId = decodeURIComponent(rawCaseId).trim().toUpperCase();
   const created = searchParams.created === "1";
