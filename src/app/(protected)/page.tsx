@@ -25,7 +25,7 @@ export default async function Home() {
           <div>
             <div className={styles.title}>Case Tracker</div>
             <div className={styles.subtitle}>
-              নোট লিখে কেস আইডি জেনারেট করুন, পরে কেস আইডি দিয়ে ট্র্যাক করুন
+              Write a note to generate a Case ID, then use the Case ID to track it later
             </div>
           </div>
           {hasPassword ? (
@@ -41,14 +41,14 @@ export default async function Home() {
 
         {dbError ? (
           <div className={styles.notice}>
-            Database সেট করা নেই বা কানেক্ট হচ্ছে না:{" "}
+            Database is not set or cannot connect:{" "}
             <span className={styles.mono}>{dbError}</span>
           </div>
         ) : null}
 
         <div className={styles.grid}>
           <section className={styles.card}>
-            <div className={styles.cardTitle}>নতুন কেস খুলুন</div>
+            <div className={styles.cardTitle}>Create New Case</div>
             <form action={createCaseAction} className={styles.form}>
               <div className={styles.row2}>
                 <label className={styles.label}>
@@ -56,7 +56,7 @@ export default async function Home() {
                   <input
                     className={styles.input}
                     name="memberName"
-                    placeholder="যেমন: Rahim"
+                    placeholder="e.g. Rahim"
                   />
                 </label>
                 <label className={styles.label}>
@@ -64,7 +64,7 @@ export default async function Home() {
                   <input
                     className={styles.input}
                     name="memberContact"
-                    placeholder="যেমন: +8801XXXXXXXXX"
+                    placeholder="e.g. +8801XXXXXXXXX"
                   />
                 </label>
               </div>
@@ -75,7 +75,7 @@ export default async function Home() {
                   className={styles.input}
                   name="subject"
                   required
-                  placeholder="কমপ্লেইনের শিরোনাম"
+                  placeholder="Complaint subject"
                 />
               </label>
 
@@ -85,7 +85,7 @@ export default async function Home() {
                   className={styles.textarea}
                   name="note"
                   required
-                  placeholder="কমপ্লেইন ডিটেইলস / আপনার নোট"
+                  placeholder="Complaint details / your notes"
                 />
               </label>
 
@@ -94,21 +94,21 @@ export default async function Home() {
                   Generate Case ID
                 </button>
                 <div className={styles.hint}>
-                  সাবমিট করলে অটো কেস পেইজে নিয়ে যাবে
+                  After submitting, it will open the case page automatically
                 </div>
               </div>
             </form>
           </section>
 
           <section className={styles.card}>
-            <div className={styles.cardTitle}>কেস আইডি দিয়ে খুঁজুন</div>
+            <div className={styles.cardTitle}>Find by Case ID</div>
             <form action={goToCaseAction} className={styles.form}>
               <label className={styles.label}>
                 Case ID
                 <input
                   className={styles.input}
                   name="caseId"
-                  placeholder="যেমন: CS-20260318-1A2B3C"
+                  placeholder="e.g. CS-20260318-1A2B3C"
                 />
               </label>
               <div className={styles.buttonRow}>
@@ -116,14 +116,14 @@ export default async function Home() {
                   Open Case
                 </button>
                 <div className={styles.hint}>
-                  কাস্টমারকে এই কেস আইডি দিন
+                  Give this Case ID to the customer
                 </div>
               </div>
             </form>
 
             <div style={{ height: 14 }} />
 
-            <div className={styles.cardTitle}>সাম্প্রতিক কেস</div>
+            <div className={styles.cardTitle}>Recent Cases</div>
             {recentCases.length ? (
               <table className={styles.table}>
                 <thead>
@@ -155,8 +155,8 @@ export default async function Home() {
             ) : (
               <div className={styles.hint}>
                 {dbError
-                  ? "Database সেট হলে এখানে কেস লিস্ট দেখা যাবে"
-                  : "এখনও কোনো কেস নেই"}
+                  ? "Once the database is set up, recent cases will show here"
+                  : "No cases yet"}
               </div>
             )}
           </section>
@@ -165,4 +165,3 @@ export default async function Home() {
     </div>
   );
 }
-

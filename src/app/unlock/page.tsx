@@ -43,7 +43,7 @@ export default function UnlockPage(props: {
                 Enter
               </button>
               <div className={styles.hint}>
-                ENV এ <span className={styles.mono}>APP_PASSWORD</span> সেট থাকলে এই স্ক্রিন দেখাবে
+                This screen appears when <span className={styles.mono}>APP_PASSWORD</span> is set in your environment variables
               </div>
             </div>
           </form>
@@ -52,4 +52,3 @@ export default function UnlockPage(props: {
     </div>
   );
 }
-

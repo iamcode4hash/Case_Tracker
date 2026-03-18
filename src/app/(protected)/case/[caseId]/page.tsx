@@ -26,7 +26,7 @@ export default async function CasePage(props: {
             <div>
               <div className={styles.title}>Case Not Found</div>
               <div className={styles.subtitle}>
-                এই কেস আইডি পাওয়া যায়নি:{" "}
+                No case found for:{" "}
                 <span className={styles.mono}>{caseId}</span>
               </div>
             </div>
@@ -76,7 +76,7 @@ export default async function CasePage(props: {
 
         {created ? (
           <div className={styles.notice}>
-            কেস তৈরি হয়েছে। এই কেস আইডি কাস্টমার/মেম্বারকে দিন:{" "}
+            Case created. Give this Case ID to the customer/member:{" "}
             <span className={styles.mono}>{row.case_id}</span>
           </div>
         ) : null}
@@ -148,7 +148,7 @@ export default async function CasePage(props: {
                   className={styles.textarea}
                   name="note"
                   required
-                  placeholder="নতুন আপডেট/ফলোআপ নোট"
+                  placeholder="New update / follow-up note"
                 />
               </label>
               <div className={styles.buttonRow}>
@@ -180,7 +180,7 @@ export default async function CasePage(props: {
                 </tbody>
               </table>
             ) : (
-              <div className={styles.hint}>এখনও কোনো নোট নেই</div>
+              <div className={styles.hint}>No notes yet</div>
             )}
           </section>
         </div>
@@ -188,4 +188,3 @@ export default async function CasePage(props: {
     </div>
   );
 }
-
