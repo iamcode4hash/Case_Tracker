@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { addNoteAction, logoutAction, updateCaseMetaAction } from "@/app/actions";
+import ThemeToggle from "@/app/ThemeToggle";
 import { getCaseById, listAudits, listNotes } from "@/lib/cases";
 import styles from "@/app/ui.module.css";
 
@@ -91,6 +92,10 @@ export default async function CasePage(props: {
             </div>
           </div>
           <div className={styles.buttonRow}>
+            <Link className={styles.link} href="/dashboard">
+              Dashboard
+            </Link>
+            <ThemeToggle />
             {hasPassword ? (
               <form action={logoutAction}>
                 <button className={styles.buttonSecondary} type="submit">
@@ -99,7 +104,7 @@ export default async function CasePage(props: {
               </form>
             ) : null}
             <Link className={styles.link} href="/">
-              Back
+              Cases
             </Link>
           </div>
         </header>

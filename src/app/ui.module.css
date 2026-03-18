@@ -1,10 +1,8 @@
 .shell {
   min-height: 100vh;
   padding: 26px 18px 64px;
-  background: radial-gradient(1200px 600px at 20% 0%, rgba(75, 102, 255, 0.22), rgba(11, 16, 32, 0) 60%),
-    radial-gradient(900px 520px at 90% 12%, rgba(34, 211, 238, 0.12), rgba(11, 16, 32, 0) 55%),
-    #0b1020;
-  color: #e8ebff;
+  background: var(--ct-shell-bg);
+  color: var(--ct-fg);
 }
 
 .container {
@@ -67,8 +65,8 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: var(--ct-card-bg);
+  border: 1px solid var(--ct-card-border);
   border-radius: 14px;
   padding: 16px;
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
@@ -125,9 +123,9 @@
 .select {
   width: 100%;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.18);
-  color: #e8ebff;
+  border: 1px solid var(--ct-input-border);
+  background: var(--ct-input-bg);
+  color: var(--ct-fg);
   padding: 10px 11px;
   font-size: 14px;
   outline: none;
@@ -139,7 +137,7 @@
 .select:focus {
   border-color: rgba(75, 102, 255, 0.65);
   box-shadow: 0 0 0 4px rgba(75, 102, 255, 0.18);
-  background: rgba(0, 0, 0, 0.26);
+  background: var(--ct-input-bg-focus);
 }
 
 .textarea {
@@ -155,7 +153,7 @@
 
 .button {
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: linear-gradient(135deg, rgba(75, 102, 255, 1), rgba(75, 102, 255, 0.85));
+  background: linear-gradient(135deg, var(--ct-accent), rgba(75, 102, 255, 0.85));
   color: #0b1020;
   padding: 10px 12px;
   font-size: 14px;
@@ -168,7 +166,7 @@
 .buttonSecondary {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.08);
-  color: #e8ebff;
+  color: var(--ct-fg);
   padding: 10px 12px;
   font-size: 14px;
   font-weight: 680;
@@ -190,7 +188,7 @@
 .buttonTiny {
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.08);
-  color: #e8ebff;
+  color: var(--ct-fg);
   padding: 6px 10px;
   font-size: 12px;
   font-weight: 680;
@@ -207,6 +205,27 @@
   transform: translateY(0px);
 }
 
+.buttonDanger {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.12);
+  color: #ffd1d1;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 680;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+}
+
+.buttonDanger:hover {
+  transform: translateY(-1px);
+  background: rgba(239, 68, 68, 0.16);
+}
+
+.buttonDanger:active {
+  transform: translateY(0px);
+}
+
 .iconButton {
   width: 34px;
   height: 30px;
@@ -216,7 +235,7 @@
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.06);
-  color: #e8ebff;
+  color: var(--ct-fg);
   cursor: pointer;
   transition: transform 120ms ease, background 120ms ease;
 }
@@ -283,6 +302,30 @@
   margin-top: 10px;
 }
 
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: rgba(232, 235, 255, 0.72);
+}
+
+.statValue {
+  font-size: 22px;
+  font-weight: 760;
+  letter-spacing: -0.3px;
+  margin-top: 4px;
+}
+
+.statSub {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(232, 235, 255, 0.65);
+}
+
 .hint {
   font-size: 12px;
   color: rgba(232, 235, 255, 0.7);
@@ -312,7 +355,7 @@
 }
 
 .link {
-  color: #b9c4ff;
+  color: var(--ct-link);
   text-decoration: none;
 }
 
@@ -377,10 +420,36 @@
   justify-content: center;
 }
 
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 50;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 760px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
 @media (max-width: 900px) {
   .grid,
   .split,
   .gridMain,
+  .statGrid,
   .row2 {
     grid-template-columns: 1fr;
   }

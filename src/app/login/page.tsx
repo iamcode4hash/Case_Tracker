@@ -1,4 +1,5 @@
 import { loginAction } from "@/app/actions";
+import ThemeToggle from "@/app/ThemeToggle";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,10 @@ export default function LoginPage(props: {
               <div className={styles.subtitle}>Sign in</div>
             </div>
           </div>
-          <span className={`${styles.pill} ${styles.pillYellow}`}>Protected</span>
+          <div className={styles.buttonRow}>
+            <ThemeToggle />
+            <span className={`${styles.pill} ${styles.pillYellow}`}>Protected</span>
+          </div>
         </header>
 
         {error ? <div className={styles.notice}>Invalid username or password</div> : null}

@@ -8,6 +8,7 @@ import {
   quickStatusAction,
   toggleStarAction,
 } from "@/app/actions";
+import ThemeToggle from "@/app/ThemeToggle";
 import { getCurrentUser } from "@/lib/current-user";
 import {
   listCases,
@@ -16,6 +17,7 @@ import {
   type CaseStatus,
 } from "@/lib/cases";
 import styles from "@/app/ui.module.css";
+import CreateCaseModal from "@/app/(protected)/CreateCaseModal";
 
 export const dynamic = "force-dynamic";
 
@@ -101,12 +103,19 @@ export default async function Home(props: {
             </div>
           </div>
           <div className={styles.buttonRow}>
+            <Link className={styles.link} href="/dashboard">
+              Dashboard
+            </Link>
             {isOwner ? (
               <Link className={styles.link} href="/admin/users">
                 Admin
               </Link>
             ) : null}
+            <Link className={styles.link} href="/">
+              Cases
+            </Link>
             {current ? <span className={styles.pill}>{current.username}</span> : null}
+            <ThemeToggle />
             <form action={logoutAction}>
               <button className={styles.buttonSecondary} type="submit">
                 Lock
@@ -124,78 +133,13 @@ export default async function Home(props: {
 
         <div className={styles.gridMain}>
           <section className={styles.card}>
-            <div className={styles.cardTitle}>Create New Case</div>
-            <form action={createCaseAction} className={styles.form}>
-              <div className={styles.row2}>
-                <label className={styles.label}>
-                  Member Name (optional)
-                  <input
-                    className={styles.input}
-                    name="memberName"
-                    placeholder="e.g. Rahim"
-                  />
-                </label>
-                <label className={styles.label}>
-                  Contact/WhatsApp (optional)
-                  <input
-                    className={styles.input}
-                    name="memberContact"
-                    placeholder="e.g. +8801XXXXXXXXX"
-                  />
-                </label>
-              </div>
-
-              <label className={styles.label}>
-                Subject
-                <input
-                  className={styles.input}
-                  name="subject"
-                  required
-                  placeholder="Complaint subject"
-                />
-              </label>
-
-              <div className={styles.row2}>
-                <label className={styles.label}>
-                  Category
-                  <select className={styles.select} name="category" defaultValue="GENERAL">
-                    <option value="GENERAL">GENERAL</option>
-                    <option value="BILLING">BILLING</option>
-                    <option value="TECHNICAL">TECHNICAL</option>
-                    <option value="ACCOUNT">ACCOUNT</option>
-                    <option value="OTHER">OTHER</option>
-                  </select>
-                </label>
-                <label className={styles.label}>
-                  Priority
-                  <select className={styles.select} name="priority" defaultValue="NORMAL">
-                    <option value="LOW">LOW</option>
-                    <option value="NORMAL">NORMAL</option>
-                    <option value="HIGH">HIGH</option>
-                    <option value="URGENT">URGENT</option>
-                  </select>
-                </label>
-              </div>
-
-              <label className={styles.label}>
-                Note (initial)
-                <textarea
-                  className={styles.textarea}
-                  name="note"
-                  required
-                  placeholder="Complaint details / your notes"
-                />
-              </label>
-
-              <div className={styles.buttonRow}>
-                <button className={styles.button} type="submit">
-                  Generate Case ID
-                </button>
-                <div className={styles.hint}>
-                  After submitting, it will open the case page automatically
-                </div>
-              </div>
-            </form>
+            <div className={styles.cardHeaderRow}>
+              <div className={styles.cardTitleTight}>Create</div>
+              <CreateCaseModal createCaseAction={createCaseAction} />
+            </div>
+            <div className={styles.hint}>
+              Create a new case in a pop-up form and share the generated Case ID with the customer.
+            </div>
           </section>
 
           <section className={styles.card}>
@@ -229,39 +173,41 @@ export default async function Home(props: {
                 />
               </label>
 
-              <div className={styles.row2}>
-                <label className={styles.label}>
-                  Status
-                  <select className={styles.select} name="status" defaultValue={status}>
-                    <option value="ALL">ALL</option>
-                    <option value="OPEN">OPEN</option>
-                    <option value="PENDING">PENDING</option>
-                    <option value="RESOLVED">RESOLVED</option>
-                  </select>
-                </label>
-                <label className={styles.label}>
-                  Category
-                  <select className={styles.select} name="category" defaultValue={category}>
-                    <option value="ALL">ALL</option>
-                    <option value="GENERAL">GENERAL</option>
-                    <option value="BILLING">BILLING</option>
-                    <option value="TECHNICAL">TECHNICAL</option>
-                    <option value="ACCOUNT">ACCOUNT</option>
-                    <option value="OTHER">OTHER</option>
-                  </select>
-                </label>
-              </div>
-
-              <label className={styles.label}>
-                Priority
-                <select className={styles.select} name="priority" defaultValue={priority}>
-                  <option value="ALL">ALL</option>
-                  <option value="LOW">LOW</option>
-                  <option value="NORMAL">NORMAL</option>
-                  <option value="HIGH">HIGH</option>
-                  <option value="URGENT">URGENT</option>
-                </select>
-              </label>
+              <details className={styles.details}>
+                <summary className={styles.detailsSummary}>Advanced filters</summary>
+                <div className={styles.detailsBody}>
+                  <label className={styles.label}>
+                    Status
+                    <select className={styles.select} name="status" defaultValue={status}>
+                      <option value="ALL">ALL</option>
+                      <option value="OPEN">OPEN</option>
+                      <option value="PENDING">PENDING</option>
+                      <option value="RESOLVED">RESOLVED</option>
+                    </select>
+                  </label>
+                  <label className={styles.label}>
+                    Category
+                    <select className={styles.select} name="category" defaultValue={category}>
+                      <option value="ALL">ALL</option>
+                      <option value="GENERAL">GENERAL</option>
+                      <option value="BILLING">BILLING</option>
+                      <option value="TECHNICAL">TECHNICAL</option>
+                      <option value="ACCOUNT">ACCOUNT</option>
+                      <option value="OTHER">OTHER</option>
+                    </select>
+                  </label>
+                  <label className={styles.label}>
+                    Priority
+                    <select className={styles.select} name="priority" defaultValue={priority}>
+                      <option value="ALL">ALL</option>
+                      <option value="LOW">LOW</option>
+                      <option value="NORMAL">NORMAL</option>
+                      <option value="HIGH">HIGH</option>
+                      <option value="URGENT">URGENT</option>
+                    </select>
+                  </label>
+                </div>
+              </details>
 
               <div className={styles.buttonRow}>
                 <button className={styles.buttonSecondary} type="submit">

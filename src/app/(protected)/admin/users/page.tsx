@@ -1,10 +1,14 @@
+import Link from "next/link";
+
 import {
   createUserAction,
+  deleteUserAction,
   logoutAction,
   renameUserAction,
   resetUserPasswordAction,
   toggleUserActiveAction,
 } from "@/app/actions";
+import ThemeToggle from "@/app/ThemeToggle";
 import { getCurrentUser } from "@/lib/current-user";
 import { listUsers } from "@/lib/users";
 import styles from "@/app/ui.module.css";
@@ -48,6 +52,13 @@ export default async function UsersPage(props: {
             </div>
           </div>
           <div className={styles.buttonRow}>
+            <Link className={styles.link} href="/dashboard">
+              Dashboard
+            </Link>
+            <Link className={styles.link} href="/">
+              Cases
+            </Link>
+            <ThemeToggle />
             <form action={logoutAction}>
               <button className={styles.buttonSecondary} type="submit">
                 Lock
@@ -74,6 +85,7 @@ export default async function UsersPage(props: {
                 Role
                 <select className={styles.select} name="role" defaultValue="AGENT">
                   <option value="OWNER">OWNER</option>
+                  <option value="CSM">CSM</option>
                   <option value="AGENT">AGENT</option>
                   <option value="VIEWER">VIEWER</option>
                 </select>
@@ -139,6 +151,13 @@ export default async function UsersPage(props: {
                           <input type="hidden" name="isActive" value={u.is_active ? "0" : "1"} />
                           <button className={styles.buttonTiny} type="submit">
                             {u.is_active ? "Disable" : "Enable"}
+                          </button>
+                        </form>
+
+                        <form action={deleteUserAction}>
+                          <input type="hidden" name="userId" value={u.id} />
+                          <button className={styles.buttonDanger} type="submit">
+                            Delete
                           </button>
                         </form>
                       </div>

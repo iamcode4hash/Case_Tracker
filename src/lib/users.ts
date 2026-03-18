@@ -116,3 +116,12 @@ export async function getUserById(userId: number) {
   `;
   return rows[0] ?? null;
 }
+
+export async function deleteUser(userId: number) {
+  await ensureSchema();
+  const sql = db();
+  await sql`
+    DELETE FROM app_users
+    WHERE id = ${userId};
+  `;
+}

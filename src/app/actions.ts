@@ -28,6 +28,7 @@ import {
 import {
   countActiveOwners,
   createUser,
+  deleteUser,
   findUserByUsername,
   getUserById,
   resetPassword,
@@ -320,7 +321,7 @@ export async function loginAction(formData: FormData) {
 
 function parseRole(input: string): UserRole {
   const v = input.trim().toUpperCase();
-  if (v === "OWNER" || v === "AGENT" || v === "VIEWER") return v;
+  if (v === "OWNER" || v === "CSM" || v === "AGENT" || v === "VIEWER") return v;
   return "AGENT";
 }
 
@@ -409,6 +410,39 @@ export async function toggleUserActiveAction(formData: FormData) {
     await deleteSessionsForUser(userId);
   }
 
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
+}
+
+export async function deleteUserAction(formData: FormData) {
+  const current = await getCurrentUser();
+  if (!current || current.role !== "OWNER") {
+    redirect("/");
+  }
+
+  const userId = Number(formData.get("userId") ?? 0);
+  if (!userId) {
+    redirect("/admin/users?error=1");
+  }
+
+  if (current.authType === "session" && current.id === userId) {
+    redirect("/admin/users?error=1");
+  }
+
+  const user = await getUserById(userId);
+  if (!user) {
+    redirect("/admin/users?error=1");
+  }
+
+  if (user.role === "OWNER") {
+    const owners = await countActiveOwners();
+    if (owners <= 1) {
+      redirect("/admin/users?error=1");
+    }
+  }
+
+  await deleteSessionsForUser(userId);
+  await deleteUser(userId);
   revalidatePath("/admin/users");
   redirect("/admin/users");
 }

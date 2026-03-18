@@ -6,7 +6,7 @@ import { db, ensureSchema } from "@/lib/db";
 
 export const SESSION_COOKIE_NAME = "ct_session";
 
-export type UserRole = "OWNER" | "AGENT" | "VIEWER";
+export type UserRole = "OWNER" | "CSM" | "AGENT" | "VIEWER";
 
 export type CurrentUser = {
   id: number;
