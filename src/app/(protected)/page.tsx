@@ -31,6 +31,20 @@ function parsePriority(value: string | undefined): CasePriority | "ALL" {
   return "ALL";
 }
 
+function statusPillClass(status: string) {
+  if (status === "OPEN") return `${styles.pill} ${styles.pillBlue}`;
+  if (status === "PENDING") return `${styles.pill} ${styles.pillYellow}`;
+  if (status === "RESOLVED") return `${styles.pill} ${styles.pillGreen}`;
+  return styles.pill;
+}
+
+function priorityPillClass(priority: string) {
+  if (priority === "URGENT") return `${styles.pill} ${styles.pillRed}`;
+  if (priority === "HIGH") return `${styles.pill} ${styles.pillYellow}`;
+  if (priority === "LOW") return `${styles.pill} ${styles.pillBlue}`;
+  return styles.pill;
+}
+
 export default async function Home(props: {
   searchParams: Record<string, string | string[] | undefined>;
 }) {
@@ -64,10 +78,13 @@ export default async function Home(props: {
     <div className={styles.shell}>
       <div className={styles.container}>
         <header className={styles.header}>
-          <div>
-            <div className={styles.title}>Case Tracker</div>
-            <div className={styles.subtitle}>
-              Write a note to generate a Case ID, then use the Case ID to track it later
+          <div className={styles.brand}>
+            <div className={styles.brandMark} />
+            <div className={styles.brandText}>
+              <div className={styles.title}>Case Tracker</div>
+              <div className={styles.subtitle}>
+                Create a case, share the Case ID, and track updates in one place
+              </div>
             </div>
           </div>
           {hasPassword ? (
@@ -77,7 +94,7 @@ export default async function Home(props: {
               </button>
             </form>
           ) : (
-            <div className={styles.subtitle}>Vercel-ready</div>
+            <span className={`${styles.pill} ${styles.pillYellow}`}>Public</span>
           )}
         </header>
 
@@ -255,7 +272,7 @@ export default async function Home(props: {
                 </thead>
                 <tbody>
                   {cases.map((c) => (
-                    <tr key={c.case_id}>
+                    <tr key={c.case_id} className={styles.tr}>
                       <td className={styles.td}>
                         <Link
                           className={`${styles.link} ${styles.mono}`}
@@ -265,10 +282,10 @@ export default async function Home(props: {
                         </Link>
                       </td>
                       <td className={styles.td}>
-                        <span className={styles.pill}>{c.status}</span>
+                        <span className={statusPillClass(c.status)}>{c.status}</span>
                       </td>
                       <td className={styles.td}>
-                        <span className={styles.pill}>{c.priority}</span>
+                        <span className={priorityPillClass(c.priority)}>{c.priority}</span>
                       </td>
                       <td className={styles.td}>
                         <span className={styles.pill}>{c.category}</span>

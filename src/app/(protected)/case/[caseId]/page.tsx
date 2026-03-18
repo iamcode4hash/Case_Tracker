@@ -6,6 +6,20 @@ import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
 
+function statusPillClass(status: string) {
+  if (status === "OPEN") return `${styles.pill} ${styles.pillBlue}`;
+  if (status === "PENDING") return `${styles.pill} ${styles.pillYellow}`;
+  if (status === "RESOLVED") return `${styles.pill} ${styles.pillGreen}`;
+  return styles.pill;
+}
+
+function priorityPillClass(priority: string) {
+  if (priority === "URGENT") return `${styles.pill} ${styles.pillRed}`;
+  if (priority === "HIGH") return `${styles.pill} ${styles.pillYellow}`;
+  if (priority === "LOW") return `${styles.pill} ${styles.pillBlue}`;
+  return styles.pill;
+}
+
 export default async function CasePage(props: {
   params: { caseId: string } | Promise<{ caseId: string }>;
   searchParams:
@@ -25,11 +39,13 @@ export default async function CasePage(props: {
       <div className={styles.shell}>
         <div className={styles.container}>
           <header className={styles.header}>
-            <div>
-              <div className={styles.title}>Case Not Found</div>
-              <div className={styles.subtitle}>
-                No case found for:{" "}
-                <span className={styles.mono}>{caseId}</span>
+            <div className={styles.brand}>
+              <div className={styles.brandMark} />
+              <div className={styles.brandText}>
+                <div className={styles.title}>Case Not Found</div>
+                <div className={styles.subtitle}>
+                  No case found for: <span className={styles.mono}>{caseId}</span>
+                </div>
               </div>
             </div>
             <Link className={styles.link} href="/">
@@ -54,15 +70,18 @@ export default async function CasePage(props: {
     <div className={styles.shell}>
       <div className={styles.container}>
         <header className={styles.header}>
-          <div>
-            <div className={styles.title}>
-              Case: <span className={styles.mono}>{row.case_id}</span>
-            </div>
-            <div className={styles.subtitle}>
-              Created: {dtf.format(new Date(row.created_at))}
+          <div className={styles.brand}>
+            <div className={styles.brandMark} />
+            <div className={styles.brandText}>
+              <div className={styles.title}>
+                Case <span className={styles.mono}>{row.case_id}</span>
+              </div>
+              <div className={styles.subtitle}>
+                Created {dtf.format(new Date(row.created_at))}
+              </div>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div className={styles.buttonRow}>
             {hasPassword ? (
               <form action={logoutAction}>
                 <button className={styles.buttonSecondary} type="submit">
@@ -91,13 +110,13 @@ export default async function CasePage(props: {
                 <tr>
                   <td className={styles.td}>Status</td>
                   <td className={styles.td}>
-                    <span className={styles.pill}>{row.status}</span>
+                    <span className={statusPillClass(row.status)}>{row.status}</span>
                   </td>
                 </tr>
                 <tr>
                   <td className={styles.td}>Priority</td>
                   <td className={styles.td}>
-                    <span className={styles.pill}>{row.priority}</span>
+                    <span className={priorityPillClass(row.priority)}>{row.priority}</span>
                   </td>
                 </tr>
                 <tr>
@@ -214,7 +233,7 @@ export default async function CasePage(props: {
                 </thead>
                 <tbody>
                   {notes.map((n) => (
-                    <tr key={n.id}>
+                    <tr key={n.id} className={styles.tr}>
                       <td className={styles.td}>
                         {dtf.format(new Date(n.created_at))}
                       </td>
