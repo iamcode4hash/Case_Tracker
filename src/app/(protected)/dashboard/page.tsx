@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { logoutAction } from "@/app/actions";
-import ThemeToggle from "@/app/ThemeToggle";
 import { getCurrentUser } from "@/lib/current-user";
 import { db, ensureSchema } from "@/lib/db";
 import styles from "@/app/ui.module.css";
@@ -88,7 +87,6 @@ export default async function DashboardPage() {
               Cases
             </Link>
             {current ? <span className={styles.pill}>{current.username}</span> : null}
-            <ThemeToggle />
             <form action={logoutAction}>
               <button className={styles.buttonSecondary} type="submit">
                 Lock

@@ -175,26 +175,6 @@
   transition: transform 120ms ease, background 120ms ease;
 }
 
-.themeButton {
-  border: 1px solid var(--ct-input-border);
-  background: var(--ct-card-bg);
-  color: var(--ct-fg);
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 680;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: transform 120ms ease, background 120ms ease;
-}
-
-.themeButton:hover {
-  transform: translateY(-1px);
-}
-
-.themeButton:active {
-  transform: translateY(0px);
-}
-
 .button:hover,
 .buttonSecondary:hover {
   transform: translateY(-1px);
@@ -438,33 +418,6 @@
 .center {
   display: flex;
   justify-content: center;
-}
-
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 18px;
-  z-index: 50;
-}
-
-.modalCard {
-  width: 100%;
-  max-width: 760px;
-  max-height: calc(100vh - 42px);
-  overflow: auto;
-}
-
-.modalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 10px;
 }
 
 @media (max-width: 900px) {

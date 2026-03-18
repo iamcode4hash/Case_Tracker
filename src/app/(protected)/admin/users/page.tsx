@@ -8,7 +8,6 @@ import {
   resetUserPasswordAction,
   toggleUserActiveAction,
 } from "@/app/actions";
-import ThemeToggle from "@/app/ThemeToggle";
 import { getCurrentUser } from "@/lib/current-user";
 import { listUsers } from "@/lib/users";
 import styles from "@/app/ui.module.css";
@@ -58,7 +57,6 @@ export default async function UsersPage(props: {
             <Link className={styles.link} href="/">
               Cases
             </Link>
-            <ThemeToggle />
             <form action={logoutAction}>
               <button className={styles.buttonSecondary} type="submit">
                 Lock

@@ -1,5 +1,4 @@
 import { unlockAction } from "@/app/actions";
-import ThemeToggle from "@/app/ThemeToggle";
 import styles from "@/app/ui.module.css";
 
 export const dynamic = "force-dynamic";
@@ -20,10 +19,7 @@ export default function UnlockPage(props: {
               <div className={styles.subtitle}>Access required</div>
             </div>
           </div>
-          <div className={styles.buttonRow}>
-            <ThemeToggle />
-            <span className={`${styles.pill} ${styles.pillYellow}`}>Protected</span>
-          </div>
+          <span className={`${styles.pill} ${styles.pillYellow}`}>Protected</span>
         </header>
 
         {error ? (

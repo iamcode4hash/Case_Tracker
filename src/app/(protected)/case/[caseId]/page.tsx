@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { addNoteAction, logoutAction, updateCaseMetaAction } from "@/app/actions";
-import ThemeToggle from "@/app/ThemeToggle";
 import { getCaseById, listAudits, listNotes } from "@/lib/cases";
 import styles from "@/app/ui.module.css";
 
@@ -95,7 +94,6 @@ export default async function CasePage(props: {
             <Link className={styles.link} href="/dashboard">
               Dashboard
             </Link>
-            <ThemeToggle />
             {hasPassword ? (
               <form action={logoutAction}>
                 <button className={styles.buttonSecondary} type="submit">
