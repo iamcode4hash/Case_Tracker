@@ -1,3 +1,5 @@
+import { randomBytes } from "crypto";
+
 import { db, ensureSchema } from "@/lib/db";
 
 export type CaseCategoryRow = {
@@ -21,6 +23,10 @@ function normalizeSlug(input: string) {
 
 function normalizeLabel(input: string) {
   return input.trim().slice(0, 48);
+}
+
+function generateSlug() {
+  return `CAT_${randomBytes(4).toString("hex").toUpperCase()}`;
 }
 
 export async function listCategories(opts?: { includeInactive?: boolean }) {
@@ -66,10 +72,11 @@ export async function createCategory(input: { label: string; slug?: string; sort
   const sql = db();
 
   const label = normalizeLabel(input.label);
-  const slug = normalizeSlug(input.slug ?? label);
+  const normalized = normalizeSlug(input.slug ?? label);
+  const slug = normalized || generateSlug();
   const sortOrder = input.sortOrder ?? 0;
 
-  if (!label || !slug) {
+  if (!label) {
     throw new Error("Invalid category");
   }
 
@@ -134,6 +141,10 @@ export async function updateCategory(input: { id: number; label?: string; slug?:
         WHERE category = ${oldSlug};
       `;
     }
+  }
+
+  if (input.slug && !slug) {
+    throw new Error("Invalid slug");
   }
 }
 
