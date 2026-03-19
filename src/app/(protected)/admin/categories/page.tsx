@@ -104,6 +104,7 @@ export default async function CategoriesPage(props: {
                 <tr>
                   <th className={styles.th}>Label</th>
                   <th className={styles.th}>Slug</th>
+                  <th className={styles.th}>Type</th>
                   <th className={styles.th}>Active</th>
                   <th className={styles.th}>Sort</th>
                   <th className={styles.th}>Manage</th>
@@ -115,6 +116,9 @@ export default async function CategoriesPage(props: {
                     <td className={styles.td}>{c.label}</td>
                     <td className={styles.td}>
                       <span className={styles.mono}>{c.slug}</span>
+                    </td>
+                    <td className={styles.td}>
+                      {c.is_system ? <span className={styles.pill}>System</span> : <span className={styles.pill}>Custom</span>}
                     </td>
                     <td className={styles.td}>{c.is_active ? "Yes" : "No"}</td>
                     <td className={styles.td}>{c.sort_order}</td>
@@ -128,13 +132,15 @@ export default async function CategoriesPage(props: {
                           </button>
                         </form>
 
-                        <form action={updateCategoryAction} className={styles.cellActionsRow}>
-                          <input type="hidden" name="id" value={c.id} />
-                          <input className={styles.inputSmall} name="slug" defaultValue={c.slug} />
-                          <button className={styles.buttonTiny} type="submit">
-                            Update slug
-                          </button>
-                        </form>
+                        {c.is_system ? null : (
+                          <form action={updateCategoryAction} className={styles.cellActionsRow}>
+                            <input type="hidden" name="id" value={c.id} />
+                            <input className={styles.inputSmall} name="slug" defaultValue={c.slug} />
+                            <button className={styles.buttonTiny} type="submit">
+                              Update slug
+                            </button>
+                          </form>
+                        )}
 
                         <form action={updateCategoryAction} className={styles.cellActionsRow}>
                           <input type="hidden" name="id" value={c.id} />
@@ -152,12 +158,14 @@ export default async function CategoriesPage(props: {
                           </button>
                         </form>
 
-                        <form action={deleteCategoryAction}>
-                          <input type="hidden" name="id" value={c.id} />
-                          <button className={styles.buttonDanger} type="submit">
-                            Delete
-                          </button>
-                        </form>
+                        {c.is_system ? null : (
+                          <form action={deleteCategoryAction}>
+                            <input type="hidden" name="id" value={c.id} />
+                            <button className={styles.buttonDanger} type="submit">
+                              Delete
+                            </button>
+                          </form>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -170,4 +178,3 @@ export default async function CategoriesPage(props: {
     </div>
   );
 }
-

@@ -69,22 +69,25 @@ export async function ensureSchema() {
       id BIGSERIAL PRIMARY KEY,
       slug TEXT NOT NULL UNIQUE,
       label TEXT NOT NULL,
+      is_system BOOLEAN NOT NULL DEFAULT FALSE,
       is_active BOOLEAN NOT NULL DEFAULT TRUE,
       sort_order INTEGER NOT NULL DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `;
 
+  await sql`ALTER TABLE case_categories ADD COLUMN IF NOT EXISTS is_system BOOLEAN NOT NULL DEFAULT FALSE;`;
+
   await sql`CREATE INDEX IF NOT EXISTS idx_case_categories_active_sort ON case_categories(is_active DESC, sort_order ASC, label ASC);`;
 
   await sql`
-    INSERT INTO case_categories (slug, label, sort_order)
+    INSERT INTO case_categories (slug, label, sort_order, is_system)
     VALUES
-      ('GENERAL','General',0),
-      ('BILLING','Billing',10),
-      ('TECHNICAL','Technical',20),
-      ('ACCOUNT','Account',30),
-      ('OTHER','Other',40)
+      ('GENERAL','General',0, TRUE),
+      ('BILLING','Billing',10, TRUE),
+      ('TECHNICAL','Technical',20, TRUE),
+      ('ACCOUNT','Account',30, TRUE),
+      ('OTHER','Other',40, TRUE)
     ON CONFLICT (slug) DO NOTHING;
   `;
 

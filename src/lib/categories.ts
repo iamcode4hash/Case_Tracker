@@ -4,6 +4,7 @@ export type CaseCategoryRow = {
   id: number;
   slug: string;
   label: string;
+  is_system: boolean;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -28,7 +29,7 @@ export async function listCategories(opts?: { includeInactive?: boolean }) {
 
   const includeInactive = Boolean(opts?.includeInactive);
   const rows = await sql<CaseCategoryRow[]>`
-    SELECT id, slug, label, is_active, sort_order, created_at
+    SELECT id, slug, label, is_system, is_active, sort_order, created_at
     FROM case_categories
     ${includeInactive ? sql`` : sql`WHERE is_active = TRUE`}
     ORDER BY is_active DESC, sort_order ASC, label ASC;
@@ -92,15 +93,14 @@ export async function updateCategory(input: { id: number; label?: string; slug?:
     throw new Error("No changes");
   }
 
-  const oldRows = slug
-    ? await sql<Array<{ slug: string }>>`
-        SELECT slug
-        FROM case_categories
-        WHERE id = ${input.id}
-        LIMIT 1;
-      `
-    : [];
+  const oldRows = await sql<Array<{ slug: string; is_system: boolean }>>`
+    SELECT slug, is_system
+    FROM case_categories
+    WHERE id = ${input.id}
+    LIMIT 1;
+  `;
   const oldSlug = oldRows[0]?.slug;
+  const isSystem = Boolean(oldRows[0]?.is_system);
 
   if (label) {
     await sql`
@@ -119,6 +119,9 @@ export async function updateCategory(input: { id: number; label?: string; slug?:
   }
 
   if (slug) {
+    if (isSystem) {
+      throw new Error("System category slug cannot be changed");
+    }
     if (oldSlug && oldSlug !== slug) {
       await sql`
         UPDATE case_categories
@@ -148,14 +151,18 @@ export async function deleteCategory(input: { id: number }) {
   await ensureSchema();
   const sql = db();
 
-  const rows = await sql<Array<{ slug: string }>>`
-    SELECT slug
+  const rows = await sql<Array<{ slug: string; is_system: boolean }>>`
+    SELECT slug, is_system
     FROM case_categories
     WHERE id = ${input.id}
     LIMIT 1;
   `;
   const slug = rows[0]?.slug;
+  const isSystem = Boolean(rows[0]?.is_system);
   if (!slug) return;
+  if (isSystem) {
+    throw new Error("System categories cannot be deleted");
+  }
 
   const usedRows = await sql<Array<{ count: string }>>`
     SELECT COUNT(*)::text AS count
